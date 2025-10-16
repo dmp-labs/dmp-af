@@ -1,7 +1,7 @@
 # Python Virtual Environment Tasks in dbt pipelines
 
 Since _dmp-af v0.12.0_, you can create and incorporate arbitrary python tasks into your dbt pipelines.
-It has the same idea as [kubernetes tasks](./kubernetes_tasks.md): write some custom code for ingestion, machine
+It has the same idea as [kubernetes tasks](./kubernetes.md): write some custom code for ingestion, machine
 learning, or any other task, and run in the same dbt project if it was allowed by dbt model.
 
 ## How to create a python venv task
@@ -94,4 +94,4 @@ default:
 If everything is set up correctly, you can view the model in the dbt graph and run it will be run as a usual DAG
 component.
 
-![](../docs/static/py_venv_task.png)
+![](../static/py_venv_task.png)

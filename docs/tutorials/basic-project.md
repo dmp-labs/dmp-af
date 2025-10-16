@@ -2,9 +2,9 @@
 As an example, we use the [jaffle_shop](https://github.com/dbt-labs/jaffle_shop) dbt project with some useful modifications.
 As `dmp-af` is domain-oriented tools, there's domain `svc_jaffle_shop` in the example. It's a simple domain with all the models, tests and seeds.
 
-DAG file: [example_dmp_af_dag.py](dags/example_dmp_af_dag.py)
+DAG files: [examples/dags/](https://github.com/dmp-labs/dmp-af/tree/main/examples/dags)
 
-![](../docs/static/svc_jaffle_shop_dags.png)
+![](../static/svc_jaffle_shop_dags.png)
 
 Modifications:
 1. Models on _staging_ layer have `@daily` scheduling. They appear in `svc_jaffle_shop__daily` Airflow DAG that has daily scheduling.
@@ -15,7 +15,7 @@ Here's the DAGs layout:
 
 |                     Hourly DAG                      |                      Daily DAG                      |
 |:---------------------------------------------------:|:---------------------------------------------------:|
-| ![](../docs/static/horly_basic_jaffle_shop_dag.png) | ![](../docs/static/daily_basic_jaffle_shop_dag.png) |
+| ![](../static/horly_basic_jaffle_shop_dag.png) | ![](../static/daily_basic_jaffle_shop_dag.png) |
 
 ### Backfill DAGs
 You may notice that `dmp-af` generated also backfill DAGs with naming patten `<domain_name>__backfill`. These DAGs have _@daily_ scheduling, but they are made to be triggered manually. 
@@ -40,10 +40,10 @@ config = Config(
 ```
 
 ## List of Examples
-2. [Advanced Project](advanced_project.md): several domains, medium and large tests, and different targets.
-3. [Dependencies management](dependencies_management.md): how to manage dependencies between models in different domains.
-4. [Manual scheduling](manual_scheduling.md): domains with manual scheduling.
-5. [Maintenance and source freshness](maintenance_and_source_freshness.md): how to manage maintenance tasks and source freshness.
-6. [Kubernetes tasks](kubernetes_tasks.md): how to run dbt models in Kubernetes.
-7. [Integration with other tools](integration_with_other_tools.md): how to integrate dmp-af with other tools.
-8. [\[Preview\] Extras and scripts](extras_and_scripts.md): available extras and scripts.
+2. [Advanced Project](advanced-project.md): several domains, medium and large tests, and different targets.
+3. [Dependencies management](dependencies.md): how to manage dependencies between models in different domains.
+4. [Manual scheduling](manual-scheduling.md): domains with manual scheduling.
+5. [Maintenance and source freshness](maintenance.md): how to manage maintenance tasks and source freshness.
+6. [Kubernetes tasks](kubernetes.md): how to run dbt models in Kubernetes.
+7. [Integration with other tools](integrations.md): how to integrate dmp-af with other tools.
+8. [\[Preview\] Extras and scripts](): available extras and scripts.

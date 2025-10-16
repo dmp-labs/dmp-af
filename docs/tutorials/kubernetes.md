@@ -94,20 +94,20 @@ This snippet shows minimum requirements for the script to work.
 ### Step 5: Write yml file
 Create a new yml file with the common structure for the dbt model. 
 The only difference is that you have to set up `dbt_target` parameter in config 
-(see [explicit dbt target](advanced_project.md#explicit-dbt-target)) with the new created profile.
+(see [explicit dbt target](advanced-project.md#explicit-dbt-target)) with the new created profile.
 
 
 ## Limitations
 1. The pod will be created in the same k8s cluster.
 2. Only resource limits for pods are supported.
-3. For now, only azure authentication is supported. If you want to pass `aadpodidbinding` to the pod, use `K8sConfig` in the main `dmp-af` config (see [K8sConfig](../dmp_af/conf/config.py)).
+3. For now, only azure authentication is supported. If you want to pass `aadpodidbinding` to the pod, use `K8sConfig` in the main `dmp-af` config (see [source code](https://github.com/dmp-labs/dmp-af/blob/main/dmp_af/conf/config.py)).
 
 
 ## List of Examples
-1. [Basic Project](basic_project.md): a single domain, small tests, and a single target.
-2. [Advanced Project](advanced_project.md): several domains, medium and large tests, and different targets.
-3. [Dependencies management](dependencies_management.md): how to manage dependencies between models in different domains.
-4. [Manual scheduling](manual_scheduling.md): domains with manual scheduling.
-5. [Maintenance and source freshness](maintenance_and_source_freshness.md): how to manage maintenance tasks and source freshness.
-7. [Integration with other tools](integration_with_other_tools.md): how to integrate dmp-af with other tools.
-8. [\[Preview\] Extras and scripts](extras_and_scripts.md): available extras and scripts.
+1. [Basic Project](basic-project.md): a single domain, small tests, and a single target.
+2. [Advanced Project](advanced-project.md): several domains, medium and large tests, and different targets.
+3. [Dependencies management](dependencies.md): how to manage dependencies between models in different domains.
+4. [Manual scheduling](manual-scheduling.md): domains with manual scheduling.
+5. [Maintenance and source freshness](maintenance.md): how to manage maintenance tasks and source freshness.
+7. [Integration with other tools](integrations.md): how to integrate dmp-af with other tools.
+8. [\[Preview\] Extras and scripts](): available extras and scripts.

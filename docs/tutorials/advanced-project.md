@@ -10,9 +10,9 @@
 6. [Explicit dbt target](#explicit-dbt-target)
 7. [Customizing retries](#customizing-retries)
 
-DAG file: [example_advanced_dmp_af_dag.py](dags/example_advanced_dmp_af_dag.py)
+DAG file: [example_advanced_dmp_af_dag.py](https://github.com/dmp-labs/dmp-af/blob/main/examples/dags/example_advanced_dmp_af_dag.py)
 
-![](../docs/static/dmn_jaffle_shop_dags.png)
+![](../static/dmn_jaffle_shop_dags.png)
 
 This tutorial will show you how to create a multi-domain project with tests and use different dbt targets.
 
@@ -55,7 +55,7 @@ independently of the others, maybe even in separate Airflow instance.
 All models in `dmn_jaffle_analytics.ods` refer models from `dmn_jaffle_shop.ods`. This will create for each dependency a
 group with sensors to start execution of the dependent group only when the upstream models are finished.
 
-<img src="../docs/static/cross_domain_dependencies.png" alt="drawing" width="600"/>
+<img src="../static/cross_domain_dependencies.png" alt="drawing" width="600"/>
 
 ## Small tests
 
@@ -63,7 +63,7 @@ All dbt tests that are not tagged get `@small` tag. All small tests for one mode
 group. They will be run immediately after the models are finished, and if any of them fails, the downstream models won't
 be executed.
 
-<img src="../docs/static/small_tests.png" alt="drawing" width="600"/>
+<img src="../static/small_tests.png" alt="drawing" width="600"/>
 
 Each test will appear in the separate operator to make all runs atomic.
 
@@ -85,7 +85,7 @@ tests:
 
 Medium tests are binding to all DAG's leaves.
 
-<img src="../docs/static/medium_tests.png" alt="drawing" width="600"/>
+<img src="../static/medium_tests.png" alt="drawing" width="600"/>
 
 > [!NOTE]
 > Medium tests can only be configured for models that have their own yml file.
@@ -96,7 +96,7 @@ Large tests are designed to be most heavy and time-consuming. They are placed in
 named like _<domain_name>\_\_large_tests_).
 All DAGs with large tests have `@daily` scheduling.
 
-<img src="../docs/static/large_tests.png" alt="drawing" width="600"/>
+<img src="../static/large_tests.png" alt="drawing" width="600"/>
 
 ## Using different targets
 
@@ -190,12 +190,12 @@ All unspecified policies or policies' parameters will fall back to the default r
 
 ## List of Examples
 
-1. [Basic Project](basic_project.md): a single domain, small tests, and a single target.
-3. [Dependencies management](dependencies_management.md): how to manage dependencies between models in different
+1. [Basic Project](basic-project.md): a single domain, small tests, and a single target.
+3. [Dependencies management](dependencies.md): how to manage dependencies between models in different
    domains.
-4. [Manual scheduling](manual_scheduling.md): domains with manual scheduling.
-5. [Maintenance and source freshness](maintenance_and_source_freshness.md): how to manage maintenance tasks and source
+4. [Manual scheduling](manual-scheduling.md): domains with manual scheduling.
+5. [Maintenance and source freshness](maintenance.md): how to manage maintenance tasks and source
    freshness.
-6. [Kubernetes tasks](kubernetes_tasks.md): how to run dbt models in Kubernetes.
-7. [Integration with other tools](integration_with_other_tools.md): how to integrate dmp-af with other tools.
-8. [\[Preview\] Extras and scripts](extras_and_scripts.md): available extras and scripts.
+6. [Kubernetes tasks](kubernetes.md): how to run dbt models in Kubernetes.
+7. [Integration with other tools](integrations.md): how to integrate dmp-af with other tools.
+8. [\[Preview\] Extras and scripts](): available extras and scripts.

@@ -21,7 +21,7 @@ config:
 ```
 
 To try this feature, go
-to [dmn_jaffle_analytics/ods/dmn_jaffle_analytics.ods.customers.sql](dags/advanced_jaffle_shop/dbt/models/dmn_jaffle_analytics/ods/dmn_jaffle_analytics.ods.customers.yml)
+to `dmn_jaffle_analytics/ods/dmn_jaffle_analytics.ods.customers.sql` ([in the examples](https://github.com/dmp-labs/dmp-af/tree/main/examples/dags/jaffle_shop/dbt/models))
 and add the following code to the `config` section:
 
 ```yaml
@@ -30,14 +30,14 @@ dependencies:
     skip: true
 ```
 
-and run [script](dags/build_manifest.sh) to build manifest file.
+and run the [build_manifest.sh](https://github.com/dmp-labs/dmp-af/blob/main/examples/dags/build_manifest.sh) script to build the manifest file.
 
 This will affect `dmn_jaffle_analytics__hourly` DAG: the `dmn_jaffle_analytics.ods.customers` model won't have
 dependency on `dmn_jaffle_shop.stg.customers`.
 
 |                With dependency                 |             Without dependency             |
 |:----------------------------------------------:|:------------------------------------------:|
-| ![](../docs/static/not_skipped_dependency.png) | ![](../docs/static/skipped_dependency.png) |
+| ![](../static/not_skipped_dependency.png) | ![](../static/skipped_dependency.png) |
 
 
 ## Wait policy for upstream dependencies
@@ -61,10 +61,10 @@ config:
 
 
 ## List of Examples
-1. [Basic Project](basic_project.md): a single domain, small tests, and a single target.
-2. [Advanced Project](advanced_project.md): several domains, medium and large tests, and different targets.
-4. [Manual scheduling](manual_scheduling.md): domains with manual scheduling.
-5. [Maintenance and source freshness](maintenance_and_source_freshness.md): how to manage maintenance tasks and source freshness.
-6. [Kubernetes tasks](kubernetes_tasks.md): how to run dbt models in Kubernetes.
-7. [Integration with other tools](integration_with_other_tools.md): how to integrate dmp-af with other tools.
-8. [\[Preview\] Extras and scripts](extras_and_scripts.md): available extras and scripts.
+1. [Basic Project](basic-project.md): a single domain, small tests, and a single target.
+2. [Advanced Project](advanced-project.md): several domains, medium and large tests, and different targets.
+4. [Manual scheduling](manual-scheduling.md): domains with manual scheduling.
+5. [Maintenance and source freshness](maintenance.md): how to manage maintenance tasks and source freshness.
+6. [Kubernetes tasks](kubernetes.md): how to run dbt models in Kubernetes.
+7. [Integration with other tools](integrations.md): how to integrate dmp-af with other tools.
+8. [\[Preview\] Extras and scripts](): available extras and scripts.

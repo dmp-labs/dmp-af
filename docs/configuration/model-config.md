@@ -31,7 +31,7 @@ Tag to define the schedule of the model. Supported tags are:
 - **@hourly** model will be run once an hour at the beginning of the hour (equals to `0 * * * *` cron schedule)
 - **@every15minutes** model will be run every 15 minutes (equals to `*/15 * * * *` cron schedule)
 - **@manual** - special tag to mark the model has no schedule. Read more about it
-  in [tutorial](../examples/manual_scheduling.md)
+  in [tutorial](../tutorials/manual-scheduling.md)
 
 ###### schedule_shift (_str_)
 
@@ -52,7 +52,7 @@ Schedule shift unit. Supported units are:
 ###### dependencies (_dict[str, DependencyConfig]_)
 
 Сonfig to define how the model depends on other models.
-You can find the tutorial [here](../examples/dependencies_management.md)
+You can find the tutorial [here](../tutorials/dependencies.md)
 
 For each dependency, you can specify the following options:
 
@@ -106,7 +106,7 @@ models:
 ###### dbt_target (_str_)
 
 Name of the dbt target to use for this exact model. If not set, the default target will be used.
-You can find more info in [tutorial](../examples/advanced_project.md#explicit-dbt-target)
+You can find more info in [tutorial](../tutorials/advanced-project.md#explicit-dbt-target)
 
 ###### env (dict[str, str])
 
@@ -134,7 +134,7 @@ models:
 
 ###### py_cluster, sql_cluster, daily_sql_cluster, bf_cluster (_str_)
 
-[resolving](../examples/advanced_project.md#how-is-the-target-determined) dbt target is based on these targets
+[resolving](../tutorials/advanced-project.md#how-is-the-target-determined) dbt target is based on these targets
 if explicitly not set. Usually, these parameters are set in the `dbt_project.yml` file for different domains:
 
 ```yaml
@@ -153,7 +153,7 @@ models:
 
 Config to define maintenance tasks for the model.
 
-You can find the tutorial [here](../examples/maintenance_and_source_freshness.md#maintenance-tasks).
+You can find the tutorial [here](../tutorials/maintenance.md#maintenance-tasks).
 
 Example of configuration:
 
@@ -208,7 +208,7 @@ commands in scenarios where you need to:
 To use this functionality, navigate to the DAG and manually trigger it by pressing the "Play" button. Once triggered,
 you will be prompted to fill out an input form with all required parameters. Below is an illustration of the input form:
 
-![dbt_run_model](static/dbt_run_model.png)
+![dbt_run_model](../static/dbt_run_model.png)
 
 ### Available Input Parameters
 
