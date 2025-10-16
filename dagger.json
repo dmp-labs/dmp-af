@@ -1,0 +1,8 @@
+{
+  "name": "docs",
+  "engineVersion": "v0.19.2",
+  "sdk": {
+    "source": "python"
+  },
+  "source": ".ci"
+}

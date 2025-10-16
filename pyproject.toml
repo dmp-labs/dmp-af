@@ -45,7 +45,13 @@ dev = [
     "freezegun>=1.5.1,<1.6.0",
     { include-group = "examples" },
     { include-group = "lint" },
-    { include-group = "pins" }
+    { include-group = "pins" },
+    { include-group = "docs" }
+]
+docs = [
+    "mkdocs==1.6.1",
+    "mkdocs-material==9.6.22",
+    "mkdocs-minify-plugin==0.8.0",
 ]
 examples = [
     "dbt-postgres>=1.7.0,<2",
@@ -76,10 +82,10 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ijkos/dmp-af"
-Documentation = "https://github.com/ijkos/dmp-af/blob/main/examples/README.md"
-"Release Notes" = "https://github.com/ijkos/dmp-af/blob/main/CHANGELOG.md"
-"Source Code" = "https://github.com/ijkos/dmp-af"
+Homepage = "https://github.com/dmp-labs/dmp-af"
+Documentation = "https://dmp-labs.github.io/dmp-af/"
+"Release Notes" = "https://github.com/dmp-labs/dmp-af/blob/main/CHANGELOG.md"
+"Source Code" = "https://github.com/dmp-labs/dmp-af"
 
 [project.scripts]
 dmp-af-manifest-tests = "dmp_af_functional_tests:cli"

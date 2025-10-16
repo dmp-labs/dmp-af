@@ -1,0 +1,165 @@
+site_name: dmp-af
+site_description: Distributed dbt runs on Apache Airflow
+site_author: IJKOS & PARTNERS LTD
+site_url: https://dmp-af.org
+
+repo_name: dmp-labs/dmp-af
+repo_url: https://github.com/dmp-labs/dmp-af
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant      # Instant loading
+    - navigation.tracking     # URL updates with scroll
+    - navigation.tabs         # Top-level tabs
+    - navigation.tabs.sticky  # Sticky tabs
+    - navigation.sections     # Section headers in sidebar
+    - navigation.expand       # Expand sections by default
+    - navigation.indexes      # Section index pages
+    - navigation.top          # Back to top button
+    - search.suggest          # Search suggestions
+    - search.highlight        # Highlight search terms
+    - search.share            # Share search results
+    - content.code.copy       # Copy code button
+    - content.code.annotate   # Code annotations
+  icon:
+    repo: fontawesome/brands/github
+  logo: static/logo.png  # Add your logo here later
+  favicon: static/logo.png  # Add favicon later
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dmp-labs/dmp-af
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/dmp-af/
+  version:
+    provider: mike  # Version switcher (for future use)
+
+extra_css:
+  - stylesheets/extra.css  # Custom styles (create later if needed)
+
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+plugins:
+  - search:
+      lang: en
+  - minify:
+      minify_html: true
+
+# Validation settings
+validation:
+  # Allow links to files outside the docs directory (like examples/)
+  links:
+    not_found: warn
+    absolute_links: warn
+
+nav:
+  - Home: index.md
+
+  - Getting Started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - Prerequisites: getting-started/prerequisites.md
+      - Quick Start: getting-started/quick-start.md
+      - Docker Setup: getting-started/docker-compose.md
+      - Migration from dbt-af: getting-started/migration.md
+
+  - Tutorials:
+      - tutorials/index.md
+      - Basic Project: tutorials/basic-project.md
+      - Advanced Project: tutorials/advanced-project.md
+      - Dependency Management: tutorials/dependencies.md
+      - Manual Scheduling: tutorials/manual-scheduling.md
+      - Maintenance Tasks: tutorials/maintenance.md
+      - Python Virtual Environments: tutorials/python-venv.md
+      - Kubernetes Tasks: tutorials/kubernetes.md
+      - Integrations: tutorials/integrations.md
+
+  - Features:
+      - features/index.md
+      - Domain-Driven Architecture: features/domain-driven.md
+      - Scheduling: features/scheduling.md
+      - Distributed Runs: features/distributed-runs.md
+      - Manual Run DAG: features/dbt-run-model-dag.md
+      - Test Separation: features/tests-separation.md
+      - Cross-Domain Dependencies: features/cross-domain-deps.md
+
+  - Configuration:
+      - configuration/index.md
+      - Model Configuration: configuration/model-config.md
+      - Schedules: configuration/schedules.md
+      - Dependencies: configuration/dependencies.md
+      - dbt Targets: configuration/targets.md
+      - Maintenance: configuration/maintenance.md
+      - Environment Variables: configuration/env-vars.md
+      - Advanced Options: configuration/advanced.md
+
+  - Reference:
+      - reference/index.md
+      - Config Schema: reference/config-schema.md
+      - Operators: reference/operators.md
+      - CLI Commands: reference/cli.md
+
+  - Development:
+      - development/contributing.md
+      - Testing: development/testing.md
+      - Architecture: development/architecture.md
+      - Changelog: development/changelog.md

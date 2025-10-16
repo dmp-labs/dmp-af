@@ -8,3 +8,6 @@ logs/
 
 **/dist/
 **/build/
+
+# MkDocs
+/site/
