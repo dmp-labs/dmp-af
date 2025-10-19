@@ -67,7 +67,7 @@ This project uses [Dagger](https://dagger.io/) for running tests in isolated con
 
 ```bash
 # Test with specific Python, Airflow, and dbt versions
-dagger call -m ./tests test-one-versions-combination \
+dagger call -m ./.ci tests test-one-versions-combination \
   --python-version=3.12 \
   --airflow-version=2.11.0 \
   --dbt-version=1.10 \
@@ -78,7 +78,7 @@ dagger call -m ./tests test-one-versions-combination \
 
 ```bash
 # Get the test matrix
-dagger call -m ./tests get-versions-matrix export --path=./matrix.json
+dagger call -m ./.ci tests get-versions-matrix export --path=./matrix.json
 
 # Run tests for each configuration in the matrix
 # (See .github/workflows/integration_tests.yml for the full automation)

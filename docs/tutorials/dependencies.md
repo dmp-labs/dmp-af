@@ -57,7 +57,8 @@ config:
       wait_policy: all
 ```
 
-> :warning: This setting could generate a lot of tasks in your DAG. Be cautious here! If you still want to use this, consider updating number of slots in `dbt_sensor_pool` pool.
+!!! warning 
+    This setting could generate a lot of tasks in your DAG. Be cautious here! If you still want to use this, consider updating number of slots in `dbt_sensor_pool` pool.
 
 
 ## List of Examples

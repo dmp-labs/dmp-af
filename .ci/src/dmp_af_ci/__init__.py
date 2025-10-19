@@ -13,4 +13,4 @@ rest is a long description with more detail on the module's purpose or usage,
 if appropriate. All modules should have a short description.
 """
 
-from .docs import Docs as Docs  # noqa
+from .main import DmpAfCi  # noqa

@@ -27,6 +27,13 @@ See [Prerequisites](prerequisites.md) for detailed version compatibility informa
 
 You can install dmp-af in several ways:
 
+
+### Add to your Airflow requirements.txt
+
+```diff
++ dmp-af
+```
+
 ### Via pip
 
 ```bash
@@ -68,7 +75,7 @@ Before using dmp-af, you need to compile your dbt project:
 
 ```bash
 cd /path/to/your/dbt/project
-dbt compile --target dev
+dbt compile
 ```
 
 This creates `target/manifest.json` which dmp-af uses to generate DAGs.
@@ -125,9 +132,15 @@ for dag_name, dag in dags.items():
     globals()[dag_name] = dag
 ```
 
+!!! note "Path to dbt project"
+    Change `/path/to/my_dbt_project` to the path to your dbt project on your Airflow cluster.
+
 ### Step 4: Set Up Airflow Pools
 
-dmp-af requires Airflow pools to manage concurrent task execution:
+dmp-af requires Airflow pools to manage concurrent task execution. 
+You are going to see warnings if you don't set up pools. 
+
+Create pools for each group of tasks:
 
 ```bash
 # Via Airflow CLI

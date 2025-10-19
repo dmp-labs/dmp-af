@@ -13,7 +13,7 @@ import yaml
 from click.testing import CliRunner
 from dbt.cli import dbt_cli
 
-from dmp_af.builder.dmp_af_builder import DmpAfGraph, DbtNode
+from dmp_af.builder.dmp_af_builder import DbtNode, DmpAfGraph
 from dmp_af.conf import (
     Config,
     DbtDefaultTargetsConfig,

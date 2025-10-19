@@ -44,12 +44,12 @@ ingest_venv()
 
 ```
 
-> [!NOTE]
-> It's important to keep your model's entrypoint to be available just by
-> running `python ./dmn_jaffle_analytics.ods.ingest_venv.py` in the terminal.
+!!! note
+    It's important to keep your model's entrypoint to be available just by running 
+    `python ./dmn_jaffle_analytics.ods.ingest_venv.py` in the terminal.
 
-> [!WARNING]
-> The function `model` is required to be defined in the file to make dbt able to parse the model correctly.
+!!! warning
+    The function `model` is required to be defined in the file to make dbt able to parse the model correctly.
 
 ### Model's config
 

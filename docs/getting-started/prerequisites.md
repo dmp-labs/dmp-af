@@ -8,15 +8,15 @@ dmp-af is tested and verified to work with the following version combinations:
 
 | Airflow Version | Python Versions | dbt-core Versions |
 |-----------------|-----------------|-------------------|
-| 2.6.3           | ≥3.10, <3.12   | ≥1.7, ≤1.10      |
-| 2.7.3           | ≥3.10, <3.12   | ≥1.7, ≤1.10      |
-| 2.8.4           | ≥3.10, <3.12   | ≥1.7, ≤1.10      |
-| 2.9.3           | ≥3.10, <3.13   | ≥1.7, ≤1.10      |
-| 2.10.5          | ≥3.10, <3.13   | ≥1.7, ≤1.10      |
-| 2.11.0          | ≥3.10, <3.13   | ≥1.7, ≤1.10      |
+| 2.6.3           | ≥3.10, <3.12    | ≥1.7, ≤1.10       |
+| 2.7.3           | ≥3.10, <3.12    | ≥1.7, ≤1.10       |
+| 2.8.4           | ≥3.10, <3.12    | ≥1.7, ≤1.10       |
+| 2.9.3           | ≥3.10, <3.13    | ≥1.7, ≤1.10       |
+| 2.10.5          | ≥3.10, <3.13    | ≥1.7, ≤1.10       |
+| 2.11.0          | ≥3.10, <3.13    | ≥1.7, ≤1.10       |
 
 !!! tip "Latest Versions"
-    We recommend using the latest compatible versions of Airflow (2.11.0) and dbt-core (1.10) with Python 3.12 for the best experience.
+    We recommend using the latest compatible versions of Airflow and dbt-core for the best experience.
 
 ## System Requirements
 
@@ -27,22 +27,24 @@ dmp-af is tested and verified to work with the following version combinations:
 
 ### Apache Airflow
 
+Check [Running Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html)
+and [Airflow Production Deployment](https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/production-deployment.html)
+official guides.
+
 - **Version**: 2.6 or higher
-- **Required Providers**:
-  - `apache-airflow-providers-cncf-kubernetes >=7.0.0` (for Kubernetes tasks)
 - **Configuration**:
-  - Working Airflow installation with scheduler and webserver
-  - Access to Airflow's `dags/` folder
-  - Configured database backend (Postgres recommended for production)
+    - Working Airflow installation with scheduler and webserver
+    - Access to Airflow's `dags/` folder
+    - Configured database backend (Postgres recommended for production)
 
 ### dbt
 
 - **Version**: dbt-core 1.7 to 1.10
 - **Adapter**: Any dbt adapter (Postgres, Snowflake, BigQuery, etc.)
 - **Files Needed**:
-  - Compiled `manifest.json` from your dbt project
-  - Valid `profiles.yml` configuration
-  - Accessible dbt project directory
+    - Compiled `manifest.json` from your dbt project
+    - Valid `profiles.yml` configuration
+    - Accessible dbt project directory in airflow
 
 ### Database
 
@@ -55,17 +57,19 @@ A dbt-compatible database for your data transformations:
 - Databricks
 - Any other dbt-supported warehouse
 
+Make sure that database is accessible from Airflow.
+
 ## Airflow Pools
 
-dmp-af requires two Airflow pools to be configured:
+dmp-af requires at least two Airflow pools to be configured:
 
 1. **dbt execution pool** - Controls concurrent dbt tasks
-   - Name: Based on your target (e.g., `dbt_dev`, `dbt_prod`)
-   - Slots: Start with 4-8, adjust based on resources
+    - Name: Based on your target (e.g., `dbt_dev`, `dbt_prod`)
+    - Slots: Start with 4-8, adjust based on resources
 
 2. **dbt sensor pool** - For dependency sensors
-   - Name: `dbt_sensor_pool`
-   - Slots: 10-20 recommended
+    - Name: `dbt_sensor_pool`
+    - Slots: 10-20 recommended, adjust based on resources
 
 Create via CLI:
 
@@ -128,45 +132,24 @@ For contributing or running tests:
 ### Minimum Setup
 
 1. Python environment (virtualenv, conda, or uv)
-2. Apache Airflow running with scheduler
+2. Running Apache Airflow
 3. dbt project with compiled manifest
 4. Database connection configured
 
 ### Recommended Setup
 
 1. Isolated virtual environment
-2. Airflow with Postgres backend
+2. Running Apache Airflow
 3. dbt project with version control
 4. Separate development and production targets
 5. Monitoring and logging configured
 
-## Hardware Recommendations
-
-### Development
-
-- **CPU**: 2-4 cores
-- **RAM**: 4-8 GB
-- **Disk**: 10 GB available
-
-### Production
-
-Depends on your workload, but generally:
-
-- **CPU**: 4-8+ cores
-- **RAM**: 16-32+ GB
-- **Disk**: 50+ GB (for logs and metadata)
-
-Scale based on:
-
-- Number of dbt models
-- Concurrent task execution
-- Data volume processed
 
 ## Network Requirements
 
 Ensure connectivity between:
 
-- Airflow scheduler/workers → dbt target database
+- Airflow workers → dbt target database
 - Airflow → dbt project files
 - Airflow → Kubernetes cluster (if using K8s tasks)
 

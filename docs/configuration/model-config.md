@@ -126,11 +126,11 @@ models:
         MY_ENV_WITH_AF_RENDERING: "{{'{{ var.value.get(\"my.var\", \"fallback\") }}'}}"
 ```
 
-> [!NOTE]
-> To use [airflow templates](https://airflow.apache.org/docs/apache-airflow/stable/templates-ref.html#) in the `env`
-> values, you need to use double curly braces `{{ '{{' }}` and `{{ '}}' }}` to escape them.
->
-> Pattern: `{{<airflow_template>}}` --> `{{ '{{<airflow_template>' }}`
+!!! note
+    To use [airflow templates](https://airflow.apache.org/docs/apache-airflow/stable/templates-ref.html#) in the `env`
+    values, you need to use double curly braces `{{ '{{' }}` and `{{ '}}' }}` to escape them.
+
+    Pattern: `{{<airflow_template>}}` --> `{{ '{{<airflow_template>' }}`
 
 ###### py_cluster, sql_cluster, daily_sql_cluster, bf_cluster (_str_)
 
@@ -175,11 +175,11 @@ List of Tableau refresh tasks.
 Configuration to define Tableau refresh tasks. This will trigger Tableau refresh tasks after the model is successfully
 run.
 
-> [!NOTE]
-> To use this feature, you need to install `dmp-af` with `tableau` extra.
-> ```bash
-> pip install dmp-af[tableau]
-> ```
+!!! note
+    To use this feature, you need to install `dmp-af` with `tableau` extra.
+    ```bash
+    pip install dmp-af[tableau]
+    ```
 
 Example of configuration:
 
@@ -223,6 +223,9 @@ you will be prompted to fill out an input form with all required parameters. Bel
 
 3. **Interval End Datetime**:
     - The end datetime that will be passed to the model and can be accessed via `{{ var("end_dttm") }}`.
+
+!!! note
+    For detailed information on how time intervals work in dmp-af, including automatic interval calculation for scheduled runs and manual triggers, see [Time Interval Variables](../features/distributed-runs.md#time-interval-variables).
 
 4. **Target** *(optional)*:
     - The target name to override the default target.

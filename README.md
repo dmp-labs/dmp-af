@@ -16,7 +16,7 @@
 dependencies across domains.
 
 **Built for scale.** Designed for large dbt projects (1000+ models)
-and [data mesh architectures](https://www.datamesh-architecture.com/#what-is-data-mesh). Works with any project size.
+and [data mesh architecture](https://www.datamesh-architecture.com/#what-is-data-mesh). Works with any project size.
 
 ![dmp-af](docs/static/airflow_dag_layout.png)
 

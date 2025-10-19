@@ -1,42 +1,46 @@
 # dmp-af: Distributed dbt Runs on Airflow
 
-[![PyPI - Version](https://img.shields.io/pypi/v/dmp-af)](https://pypi.org/project/dmp-af/)
-[![GitHub Build](https://github.com/dmp-labs/dmp-af/workflows/Tests/badge.svg)](https://github.com/dmp-labs/dmp-af/actions)
-[![License](https://img.shields.io/:license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dmp-af.svg)](https://pypi.org/project/dmp-af/)
+<p align="center">
+  <img src="static/logo.png" alt="dmp-af logo" width="25%" height="25%">
+</p>
+
 
 **dmp-af** runs your dbt models in parallel on Airflow. Each model becomes an independent task while preserving
 dependencies across domains.
 
 **Built for scale.** Designed for large dbt projects (1000+ models)
-and [data mesh architectures](https://www.datamesh-architecture.com/#what-is-data-mesh). Works with any project size.
+and [data mesh architecture](https://www.datamesh-architecture.com/#what-is-data-mesh). Works with any project size.
 
 ![dmp-af Architecture](static/airflow_dag_layout.png)
 
 ## Why dmp-af?
 
-### Domain-Driven Architecture
+### 🏗️ Domain-Driven Architecture
 
 Separate models by domain into different DAGs, run in parallel, perfect for data mesh architectures.
 
-### dbt-First Design
+### 🎯 dbt-First Design
 
 All configuration in dbt model configs. Analytics teams stay in dbt, no Airflow knowledge required.
 
-### Flexible Scheduling
+### ⏰ Flexible Scheduling
 
 Multiple schedules per model (`@hourly`, `@daily`, `@weekly`, `@monthly`, and more).
 
-### Enterprise Features
+### 🚀 Enterprise Features
 
 Multiple dbt targets, configurable test strategies, built-in maintenance, Kubernetes support.
 
 ## Quick Start
 
-Install dmp-af:
+Install dmp-af on your Airflow cluster alongside your other dependencies:
 
 ```bash
+# Add to your Airflow requirements.txt
 pip install dmp-af
+
+# Or add to requirements.txt
+echo "dmp-af" >> requirements.txt
 ```
 
 Create your first DAG:
@@ -73,16 +77,16 @@ for dag_name, dag in dags.items():
 
 ## Key Features
 
-### Auto-Generated DAGs
+### ⚙️ Auto-Generated DAGs
 
 Automatically creates Airflow DAGs from your dbt project, organized by domain and schedule. Handles dependencies across
 domains seamlessly.
 
-### Idempotent Runs
+### 🔄 Idempotent Runs
 
 Each model is a separate Airflow task with date intervals passed to every run. Reliable backfills and reruns guaranteed.
 
-### Team-Friendly
+### 👥 Team-Friendly
 
 Analytics teams stay in dbt. No Airflow DAG writing required. Infrastructure handled automatically.
 
@@ -106,8 +110,9 @@ substantial modifications by IJKOS & PARTNERS LTD. This fork is not affiliated w
 
 The project is licensed under the [Apache License 2.0](https://github.com/dmp-labs/dmp-af/blob/main/LICENSE).
 
-!!! tip "Migrating from dbt-af?"
-    See our **[Migration Guide](getting-started/migration.md)** for step-by-step instructions on migrating from dbt-af to dmp-af. Migration is straightforward - mostly package name changes!
+??? tip "Migrating from dbt-af?"
+    See our **[Migration Guide](getting-started/migration.md)** for step-by-step instructions on migrating from dbt-af to
+    dmp-af. Migration is straightforward - mostly package name changes!
 
 ## Community & Contributing
 

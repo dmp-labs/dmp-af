@@ -25,7 +25,7 @@ curl -L https://dl.dagger.io/dagger/install.sh | sh
 ### Test One Version Combination
 
 ```bash
-dagger call -m ./tests test-one-versions-combination \
+dagger call -m ./.ci tests test-one-versions-combination \
   --python-version=3.12 \
   --airflow-version=2.11.0 \
   --dbt-version=1.10 \
@@ -35,7 +35,7 @@ dagger call -m ./tests test-one-versions-combination \
 ### Get Test Matrix
 
 ```bash
-dagger call -m ./tests get-versions-matrix export --path=./matrix.json
+dagger call -m ./.ci tests get-versions-matrix export --path=./matrix.json
 cat matrix.json
 ```
 

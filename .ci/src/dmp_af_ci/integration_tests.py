@@ -248,7 +248,7 @@ class IntegrationTests:
                 .with_env_variable('INSTANCE_ID', uuid.uuid4().hex)
                 .with_file(
                     '/docker-entrypoint-initdb.d/init.sql',
-                    source.file('./tests/.dagger/src/integration_tests/init_test_db.sql'),
+                    source.file('./tests/init_test_db.sql'),
                 )
                 .with_exposed_port(5432)
                 .as_service(args=['postgres', '-c', 'log_statement=all'], use_entrypoint=True)

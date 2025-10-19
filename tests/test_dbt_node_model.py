@@ -7,12 +7,12 @@ from dmp_af.common.scheduling import EScheduleTag
 from dmp_af.common.utils import TestTag
 from dmp_af.conf import DbtDefaultTargetsConfig
 from dmp_af.parser.dbt_node_model import (
-    DmpAfMaintenanceConfig,
     DbtModelMaintenanceType,
     DbtNode,
     DbtNodeColumn,
     DbtNodeConfig,
     DependencyConfig,
+    DmpAfMaintenanceConfig,
     TableauRefreshResourceType,
     TableauRefreshTaskConfig,
     TTLConfig,

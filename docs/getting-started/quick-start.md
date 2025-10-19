@@ -15,10 +15,18 @@ You'll learn how to:
 
 ### Option A: Using Docker Compose (Recommended)
 
-The easiest way to get started is with the provided Docker Compose setup:
+The easiest way to get started is with the provided Docker Compose setup.
+
+First clone [dmp-af repository](https://github.com/dmp-labs/dmp-af)
 
 ```bash
-cd examples
+git clone git@github.com:dmp-labs/dmp-af.git dmp-af
+```
+
+Navigate to `examples` directory:
+
+```bash
+cd dmp-af/examples
 docker-compose up -d
 ```
 
@@ -61,24 +69,9 @@ airflow webserver --port 8080 &
 airflow scheduler &
 ```
 
-## Step 2: Install dmp-af
+## Step 2: Build the dbt manifest
 
-```bash
-pip install dmp-af[examples]
-```
-
-The `examples` extra includes `dbt-postgres` and other dependencies needed for the tutorial.
-
-## Step 3: Set Up the Example Project
-
-Clone or download the dmp-af repository to access examples:
-
-```bash
-git clone https://github.com/dmp-labs/dmp-af.git
-cd dmp-af/examples
-```
-
-### Build the dbt Manifest
+Run the build script:
 
 ```bash
 cd dags
@@ -88,8 +81,10 @@ cd dags
 This script:
 
 1. Installs dbt dependencies
-2. Compiles the Jaffle Shop project
+2. Compiles the Jaffle Shop projects
 3. Generates `target/manifest.json`
+
+All files are mounted to the Airflow container, so you can use them in the next step.
 
 ## Step 4: Configure Airflow Pools
 
@@ -151,9 +146,8 @@ for dag_name, dag in dags.items():
 1. Open Airflow UI: http://localhost:8080
 2. Log in with your credentials
 3. You should see DAGs like:
-   - `svc_jaffle_shop_daily`
-   - `svc_jaffle_shop_hourly`
-   - `dmn_jaffle_shop_daily`
+    * `svc_jaffle_shop_daily`
+    * `svc_jaffle_shop_hourly`
 
 ![DAGs in Airflow](../static/svc_jaffle_shop_dags.png)
 
@@ -161,7 +155,8 @@ for dag_name, dag in dags.items():
 
 1. Click on a DAG (e.g., `svc_jaffle_shop_daily`)
 2. Enable the DAG using the toggle switch
-3. Click the "Play" button to trigger a manual run
+3. Depending on `dry-run` argument from `compile_dmp_af_dags` function, you are going to see either running operations 
+for the past day (dry_run is enabled) or backfilled runs up to configured dag start date (dry_run is disabled)
 4. Watch tasks execute in the Graph or Grid view
 
 ![DAG Execution](../static/daily_basic_jaffle_shop_dag.png)
@@ -180,7 +175,7 @@ Examples:
 
 - `svc_jaffle_shop_daily` - Service domain, daily schedule
 - `dmn_analytics_hourly` - Analytics domain, hourly schedule
-- `svc_orders_daily_shift_1_hour` - Daily, shifted by 1 hour
+- `svc_orders_daily_shift_1_hours` - Daily, shifted by 1 hour
 
 ### Task Structure
 

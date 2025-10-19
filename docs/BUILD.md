@@ -181,7 +181,7 @@ When contributing documentation:
 If port 8000 is taken, modify the port in the Dagger call:
 
 ```bash
-dagger call serve --port=8001 up --ports=8001:8001
+dagger -m .ci call docs serve --port=8001 up --ports=8001:8001
 ```
 
 ### Broken Links

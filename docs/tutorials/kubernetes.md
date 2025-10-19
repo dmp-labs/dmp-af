@@ -10,7 +10,8 @@ When you can use this approach:
 - You want to export data somewhere else from your warehouse
 - ...
 
-> **Note**: Airflow instance must be running in the Kubernetes cluster. Created pods will be allocated in the same cluster.
+!!! note
+    Airflow instance must be running in the Kubernetes cluster. Created pods will be allocated in the same cluster.
 
 ### Step 1: Create docker image
 Create docker image with all the necessary dependencies to run your code. Here is possible `Dockerfile` example:
@@ -23,7 +24,8 @@ COPY requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 ```
 
-> **Note**: Do not use CMD or ENTRYPOINT in your Dockerfile.
+!!! note
+    Do not use CMD or ENTRYPOINT in your Dockerfile.
 
 ### Step 2: Prepare kubernetes infrastructure
 If you want to schedule pods on different nodes with specific tolerations, 

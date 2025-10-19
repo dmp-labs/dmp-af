@@ -25,11 +25,14 @@ all models that depend on this source will have a sensor that checks the freshne
 In each warehouse, there are some tasks to optimize the storage usage used by tables. 
 In this tutorial, we will cover available tasks for _Databricks_.
 
-> :grey_exclamation: Support of other warehouses will be added in the future.
+!!! warning
+    Support of other warehouses will be added in the future.
 
-> :warning: Dbt macros will be moved to separate package in the future.
+!!! warning 
+    Dbt macros will be moved to separate package in the future.
 
-> To use the maintenance tasks in your project, you need to copy files from [macros](dags/macros) directory to your dbt project.
+!!! tip 
+    To use the maintenance tasks in your project, you need to copy files from [macros](dags/macros) directory to your dbt project.
 
 ### Databricks maintenance tasks
 
@@ -109,7 +112,8 @@ config:
 
 Deduplicates table using `unique_key` and `partition_by` columns.
 
-> :exclamation: This feature is not well documented. Please use it with caution.
+!!! warning
+    This feature is not well documented. Please use it with caution.
 
 ```yaml
 config:
@@ -119,7 +123,8 @@ config:
 
 #### Persist docs
 
-> :exclamation: This feature is not well documented. Please use it with caution.
+!!! warning 
+    This feature is not well documented. Please use it with caution.
 ```yaml
 config:
   maintenance:

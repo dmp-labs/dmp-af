@@ -1,8 +1,8 @@
 {
-  "name": "docs",
+  "name": "dmp-af-ci",
   "engineVersion": "v0.19.2",
   "sdk": {
     "source": "python"
   },
-  "source": ".ci"
+  "source": "."
 }

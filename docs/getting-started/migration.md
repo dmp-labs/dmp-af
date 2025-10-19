@@ -7,10 +7,10 @@ This guide helps you migrate from the original [dbt-af](https://github.com/Tolok
 
 ## Why Migrate?
 
-- ✅ Active maintenance and development
-- ✅ New features and improvements
-- ✅ Community-driven enhancements
-- ✅ Same Apache 2.0 license
+- 🎯 Active maintenance and development
+- 🎯 New features and improvements
+- 🎯 Community-driven enhancements
+- 🎯 Same Apache 2.0 license
 
 ## Migration Steps
 
@@ -210,17 +210,17 @@ If the script runs without errors, your DAGs are correctly configured.
 
 Use this checklist to ensure you've covered all migration steps:
 
-- [ ] Updated package in `requirements.txt` or `pyproject.toml`
-- [ ] Reinstalled with `pip install -U dmp-af`
-- [ ] Updated all `from dbt_af` imports to `from dmp_af`
-- [ ] Renamed `compile_dbt_af_dags()` to `compile_dmp_af_dags()`
-- [ ] Updated `DbtAfGraph` to `DmpAfGraph` (if used)
-- [ ] Updated `DbtAFMaintenanceConfig` to `DmpAfMaintenanceConfig` (if used)
-- [ ] Updated CLI script calls (if used)
-- [ ] Updated documentation and comments
-- [ ] Tested DAG compilation
-- [ ] Verified DAGs appear in Airflow UI
-- [ ] Ran test DAG execution
+- [x] Updated package in `requirements.txt` or `pyproject.toml`
+- [x] Reinstalled with `pip install -U dmp-af`
+- [x] Updated all `from dbt_af` imports to `from dmp_af`
+- [x] Renamed `compile_dbt_af_dags()` to `compile_dmp_af_dags()`
+- [x] Updated `DbtAfGraph` to `DmpAfGraph` (if used)
+- [x] Updated `DbtAFMaintenanceConfig` to `DmpAfMaintenanceConfig` (if used)
+- [x] Updated CLI script calls (if used)
+- [x] Updated documentation and comments
+- [x] Tested DAG compilation
+- [x] Verified DAGs appear in Airflow UI
+- [x] Ran test DAG execution
 
 ## Support
 
@@ -242,7 +242,7 @@ If you prefer to stay with the original dbt-af:
 
 After completing the migration:
 
-- [ ] Review the [Quick Start](quick-start.md) guide to explore dmp-af features
-- [ ] Check out [Tutorials](../tutorials/index.md) for practical examples
-- [ ] Read about [Configuration Options](../configuration/index.md)
-- [ ] Join the community on [GitHub](https://github.com/dmp-labs/dmp-af)
+- [x] Review the [Quick Start](quick-start.md) guide to explore dmp-af features
+- [x] Check out [Tutorials](../tutorials/index.md) for practical examples
+- [x] Read about [Configuration Options](../configuration/index.md)
+- [x] Join the community on [GitHub](https://github.com/dmp-labs/dmp-af)

@@ -6,7 +6,7 @@ from airflow.utils.task_group import TaskGroup
 
 from dmp_af.conf import Config
 from dmp_af.operators.base import DbtIntervalActionOperator
-from dmp_af.parser.dbt_node_model import DmpAfMaintenanceConfig, DbtModelMaintenanceType
+from dmp_af.parser.dbt_node_model import DbtModelMaintenanceType, DmpAfMaintenanceConfig
 
 
 class DbtRunMacroOperation(DbtIntervalActionOperator):

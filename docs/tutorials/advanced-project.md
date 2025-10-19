@@ -55,7 +55,7 @@ independently of the others, maybe even in separate Airflow instance.
 All models in `dmn_jaffle_analytics.ods` refer models from `dmn_jaffle_shop.ods`. This will create for each dependency a
 group with sensors to start execution of the dependent group only when the upstream models are finished.
 
-<img src="../static/cross_domain_dependencies.png" alt="drawing" width="600"/>
+![](../static/cross_domain_dependencies.png)
 
 ## Small tests
 
@@ -63,7 +63,7 @@ All dbt tests that are not tagged get `@small` tag. All small tests for one mode
 group. They will be run immediately after the models are finished, and if any of them fails, the downstream models won't
 be executed.
 
-<img src="../static/small_tests.png" alt="drawing" width="600"/>
+![](../static/small_tests.png)
 
 Each test will appear in the separate operator to make all runs atomic.
 
@@ -85,10 +85,10 @@ tests:
 
 Medium tests are binding to all DAG's leaves.
 
-<img src="../static/medium_tests.png" alt="drawing" width="600"/>
+![](../static/medium_tests.png)
 
-> [!NOTE]
-> Medium tests can only be configured for models that have their own yml file.
+!!! note
+    Medium tests can only be configured for models that have their own yml file.
 
 ## Large tests
 
@@ -96,7 +96,7 @@ Large tests are designed to be most heavy and time-consuming. They are placed in
 named like _<domain_name>\_\_large_tests_).
 All DAGs with large tests have `@daily` scheduling.
 
-<img src="../static/large_tests.png" alt="drawing" width="600"/>
+![](../static/large_tests.png)
 
 ## Using different targets
 

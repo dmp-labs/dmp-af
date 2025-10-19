@@ -1,7 +1,7 @@
 site_name: dmp-af
 site_description: Distributed dbt runs on Apache Airflow
 site_author: IJKOS & PARTNERS LTD
-site_url: https://dmp-af.org
+site_url: https://docs.dmp-labs.com
 
 repo_name: dmp-labs/dmp-af
 repo_url: https://github.com/dmp-labs/dmp-af
@@ -9,6 +9,7 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  custom_dir: docs/overrides
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
@@ -99,6 +100,7 @@ markdown_extensions:
   - pymdownx.tilde
 
 plugins:
+  - glightbox
   - search:
       lang: en
   - minify:

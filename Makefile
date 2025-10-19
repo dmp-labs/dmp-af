@@ -6,6 +6,9 @@ BLUE := \033[0;34m
 YELLOW := \033[1;33m
 NC := \033[0m # No Color
 
+# CI
+CI_DAGGER_DIR := .ci
+
 help: ## Show this help message
 	@echo "$(BLUE)dmp-af Documentation Commands$(NC)"
 	@echo ""
@@ -23,23 +26,23 @@ docs-serve: ## Start local documentation development server (http://localhost:80
 	@echo "$(BLUE)🚀 Starting documentation server...$(NC)"
 	@echo "$(GREEN)📖 Open http://127.0.0.1:8000 in your browser$(NC)"
 	@echo ""
-	@dagger call serve --port=8000 up --ports=8000:8000
+	@dagger -m "$(CI_DAGGER_DIR)" call docs serve --port=8000 up --ports=8000:8000
 
 docs-build: ## Build static documentation site
 	@echo "$(BLUE)🔨 Building documentation...$(NC)"
-	@dagger call build export --path=./site
+	@dagger -m "$(CI_DAGGER_DIR)" call docs build export --path=./site
 	@echo "$(GREEN)✅ Documentation built successfully$(NC)"
 	@echo "Output: ./site/"
 
 docs-build-strict: ## Build documentation with strict mode (fail on warnings)
 	@echo "$(BLUE)🔨 Building documentation (strict mode)...$(NC)"
-	@dagger call build --strict=true export --path=./site
+	@dagger -m "$(CI_DAGGER_DIR)" call docs build --strict=true export --path=./site
 	@echo "$(GREEN)✅ Documentation built successfully (no warnings)$(NC)"
 	@echo "Output: ./site/"
 
 docs-test: ## Test documentation build (validates links and structure)
 	@echo "$(BLUE)🧪 Testing documentation build...$(NC)"
-	@dagger call test
+	@dagger -m "$(CI_DAGGER_DIR)" call docs test
 	@echo "$(GREEN)✅ Documentation test passed$(NC)"
 
 docs-clean: ## Remove build artifacts
