@@ -255,6 +255,14 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/11/28/b39fecaf48735fedf54ddf4dad00f6004e6243c94150c978cd70a12d6f4b/apache_airflow-2.11.0-py3-none-any.whl", hash = "sha256:e3449d46916be2cf7e6068b86dbd958577306e22407e6493ef2ae83a0c73a424", size = 13458587, upload-time = "2025-05-20T08:13:17.213Z" },
 ]
 
+[package.optional-dependencies]
+cncf-kubernetes = [
+    { name = "apache-airflow-providers-cncf-kubernetes" },
+]
+fab = [
+    { name = "apache-airflow-providers-fab" },
+]
+
 [[package]]
 name = "apache-airflow-providers-cncf-kubernetes"
 version = "10.8.0"
@@ -1088,8 +1096,7 @@ wheels = [
 name = "dmp-af"
 source = { editable = "." }
 dependencies = [
-    { name = "apache-airflow" },
-    { name = "apache-airflow-providers-cncf-kubernetes" },
+    { name = "apache-airflow", extra = ["cncf-kubernetes", "fab"] },
     { name = "attrs" },
     { name = "cachetools" },
     { name = "croniter" },
@@ -1161,8 +1168,7 @@ pins = [
 requires-dist = [
     { name = "airflow-mcd", marker = "extra == 'all'", specifier = ">=0.3.3,<0.4.0" },
     { name = "airflow-mcd", marker = "extra == 'mcd'", specifier = ">=0.3.3,<0.4.0" },
-    { name = "apache-airflow", specifier = ">=2.6,<3" },
-    { name = "apache-airflow-providers-cncf-kubernetes", specifier = ">=7.0.0" },
+    { name = "apache-airflow", extras = ["cncf-kubernetes", "fab"], specifier = ">=2.6,<3.2.0" },
     { name = "attrs", specifier = ">=23.1" },
     { name = "cachetools", specifier = ">=5.3,<7" },
     { name = "croniter", specifier = ">=3.0" },

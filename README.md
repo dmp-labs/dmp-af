@@ -19,6 +19,7 @@ dependencies across domains.
 and [data mesh architecture](https://www.datamesh-architecture.com/#what-is-data-mesh). Works with any project size.
 
 ![dmp-af](docs/static/airflow_dag_layout.png)
+![dbt-af3](docs/static/airflow3_dag_layout.png)
 
 ### Why dmp-af?
 

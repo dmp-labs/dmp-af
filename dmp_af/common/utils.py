@@ -44,7 +44,11 @@ def init_environment(config: Config):
         **config.dbt_project.additional_dbt_env,
     }
 
-    return dbt_env
+    airflow_env = {
+        '_AIRFLOW__AS_LIBRARY': 'true',
+    }
+
+    return dbt_env | airflow_env
 
 
 def find_latest_log_file(context: 'Context', log_dir: Path) -> Optional[str]:

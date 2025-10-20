@@ -10,8 +10,12 @@ try:
 except ModuleNotFoundError:
     import pydantic
 
-from airflow.operators.bash import BashOperator
 from airflow.utils.context import Context
+
+try:
+    from airflow.operators.bash import BashOperator
+except (ModuleNotFoundError, ImportError):
+    from airflow.providers.standard.operators.bash import BashOperator
 
 from dmp_af.common.constants import DBT_COMPILE_POOL
 from dmp_af.common.scheduling import BaseScheduleTag, EScheduleTag
