@@ -1,0 +1,226 @@
+name: Semantic Release
+run-name: Semantic Release (triggered by @${{ github.actor }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_level:
+        description: 'Force version bump level (leave empty for auto-detection from commits)'
+        required: false
+        type: choice
+        default: ''
+        options:
+          - ''
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: 'Create a prerelease version'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  verify-tests-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Verify integration tests workflow success
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const testsWorkflowFile = "integration_tests.yml";
+            const maxWaitTime = 3 * 60 * 60 * 1000; // 3 hours
+            const checkInterval = 30 * 1000; // 30 seconds
+            const startTime = Date.now();
+
+            async function getLatestWorkflowRun() {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: testsWorkflowFile,
+                branch: "main",
+                per_page: 1,
+              });
+              return data.workflow_runs[0];
+            }
+
+            let run = await getLatestWorkflowRun();
+
+            if (!run) {
+              core.setFailed(`Could not find any workflow runs for ${testsWorkflowFile}`);
+              return;
+            }
+
+            // Wait for the workflow to complete if it's still running
+            while (run.status !== "completed") {
+              const elapsed = Date.now() - startTime;
+              if (elapsed > maxWaitTime) {
+                core.setFailed(`Timeout: Latest workflow ${testsWorkflowFile} is still running after 3 hours`);
+                return;
+              }
+
+              core.info(`Latest workflow is still ${run.status}. Waiting... (${Math.floor(elapsed / 1000)}s elapsed)`);
+              await new Promise(resolve => setTimeout(resolve, checkInterval));
+              run = await getLatestWorkflowRun();
+            }
+
+            // Check the conclusion of the completed workflow
+            if (run.conclusion !== "success") {
+              core.setFailed(`Latest workflow ${testsWorkflowFile} finished with status: ${run.conclusion}`);
+            } else {
+              core.info(`Latest workflow ${testsWorkflowFile} finished with status: ${run.conclusion} ✅`);
+            }
+
+  release:
+    needs: verify-tests-workflow
+    runs-on: ubuntu-latest
+    concurrency: release
+    environment:
+      name: pypi
+      url: https://pypi.org/p/dmp-af
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.8.19'
+
+      - name: Install dependencies
+        run: |
+          uv sync --group release
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run Python Semantic Release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXTRA_ARGS=""
+
+          if [ -n "${{ inputs.force_level }}" ]; then
+            EXTRA_ARGS="$EXTRA_ARGS --${{ inputs.force_level }}"
+          fi
+
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            EXTRA_ARGS="$EXTRA_ARGS --prerelease"
+          fi
+
+          echo "Running semantic-release with args: $EXTRA_ARGS"
+          uvx --from python-semantic-release semantic-release version $EXTRA_ARGS
+
+          # Check if a new version was released
+          if git describe --exact-match --tags HEAD 2>/dev/null; then
+            NEW_TAG=$(git describe --exact-match --tags HEAD)
+            NEW_VERSION=${NEW_TAG#v}
+            echo "released=true" >> $GITHUB_OUTPUT
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+            echo "Released new version: $NEW_VERSION (tag: $NEW_TAG)"
+          else
+            echo "released=false" >> $GITHUB_OUTPUT
+            echo "No new version to release"
+          fi
+
+      - name: Push changes
+        if: steps.release.outputs.released == 'true'
+        run: |
+          git push origin main --follow-tags
+
+      - name: Generate GitHub Release
+        if: steps.release.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uvx --from python-semantic-release semantic-release publish
+
+  build-and-publish:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/dmp-af
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Checkout code at new tag
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.8.19'
+
+      - name: Install project
+        run: |
+          uv sync --all-packages --all-groups --all-extras
+
+      - name: Build package
+        run: |
+          uv build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-artifacts-${{ needs.release.outputs.version }}
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+
+  summary:
+    needs: [release, build-and-publish]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Summary
+        run: |
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.release.outputs.released }}" = "true" ]; then
+            echo "✅ **Released version:** ${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "🏷️ **Git tag:** ${{ needs.release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+            echo "📦 **PyPI:** https://pypi.org/project/dmp-af/${{ needs.release.outputs.version }}/" >> $GITHUB_STEP_SUMMARY
+            echo "📝 **GitHub Release:** https://github.com/${{ github.repository }}/releases/tag/${{ needs.release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ No new version released (no relevant commits since last release)" >> $GITHUB_STEP_SUMMARY
+          fi
