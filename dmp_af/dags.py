@@ -146,6 +146,7 @@ def dbt_run_model_dag(config: Config) -> dict[str, DAG]:
         dag=dag,
         target_environment=target_environment,
         dmp_af_config=config,
+        pool=config.historical_pool,
         **task_callbacks,
     )
 
