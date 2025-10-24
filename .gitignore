@@ -13,5 +13,3 @@ logs/
 # MkDocs
 /site/
 .firebase/
-firebase.json
-.firebaserc

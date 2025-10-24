@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "dmp-labs-firebase"
+  },
+  "targets": {
+    "dmp-labs-firebase": {
+      "hosting": {
+        "docs": [
+          "docs-dmp-af"
+        ]
+      }
+    }
+  }
+}
