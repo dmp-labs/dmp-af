@@ -302,6 +302,7 @@ class DagModel(DagComponent):
                 task_group=self.task_group,
                 schedule_tag=self.domain_dag.schedule,
                 dmp_af_config=self.domain_dag.config,
+                target_environment=self.target_environment,
             )
             delayed_deps(self.model_task) >> delayed_deps(test_task)
             delayed_deps(test_task) >> delayed_deps(endpoint_task)
