@@ -329,7 +329,7 @@ class Config:
     dag_start_date: pendulum.datetime = attrs.field(default=pendulum.datetime(2023, 10, 1, 0, 0, 0, tz='UTC'))
     dry_run: bool = attrs.field(default=False)
     use_dbt_target_specific_pools: bool = attrs.field(default=True)
-
+    historical_pool: Optional[str] = attrs.field(default=None)
     # airflow callbacks config
     af_callbacks: Optional[CustomAfCallbacksConfig] = attrs.field(default=None)
 
