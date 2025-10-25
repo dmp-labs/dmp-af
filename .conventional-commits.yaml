@@ -1,0 +1,39 @@
+# Configuration for conventional-pre-commit hook
+# Validates commit messages against conventional commits format
+
+types:
+  - feat
+  - fix
+  - docs
+  - style
+  - refactor
+  - perf
+  - test
+  - build
+  - ci
+  - chore
+  - revert
+
+scopes:
+  - operators
+  - sensors
+  - builder
+  - parser
+  - config
+  - integrations
+  - mcd
+  - tableau
+  - callbacks
+  - tests
+  - ci
+  - docs
+  - deps
+
+# Optional: require scope
+optional_scope: true
+
+# Optional: require body
+optional_body: true
+
+# Optional: require footer
+optional_footer: true

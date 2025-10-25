@@ -1,0 +1,36 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.ci/src/dmp_af_ci/docs.py'
+      - '.github/workflows/deploy-docs.yml'
+      - 'firebase.json'
+      - '.firebaserc'
+  workflow_dispatch:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+
+concurrency:
+  group: deploy-docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy Documentation to Firebase
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          module: ./.ci
+          args: docs deploy --service-account-key=env:FIREBASE_SERVICE_ACCOUNT_KEY
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}

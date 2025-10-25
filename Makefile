@@ -1,4 +1,4 @@
-.PHONY: help docs-serve docs-build docs-build-strict docs-test
+.PHONY: help docs-serve docs-build docs-build-strict docs-test docs-deploy docs-clean serve build test deploy
 
 # Colors for output
 GREEN := \033[0;32m
@@ -21,6 +21,7 @@ help: ## Show this help message
 	@echo "  make docs-serve         # Start local dev server"
 	@echo "  make docs-build         # Build documentation"
 	@echo "  make docs-test          # Validate documentation"
+	@echo "  make docs-deploy        # Deploy to Firebase Hosting"
 
 docs-serve: ## Start local documentation development server (http://localhost:8000)
 	@echo "$(BLUE)🚀 Starting documentation server...$(NC)"
@@ -45,6 +46,16 @@ docs-test: ## Test documentation build (validates links and structure)
 	@dagger -m "$(CI_DAGGER_DIR)" call docs test
 	@echo "$(GREEN)✅ Documentation test passed$(NC)"
 
+docs-deploy: ## Deploy documentation to Firebase Hosting
+	@echo "$(BLUE)🚀 Deploying documentation to Firebase...$(NC)"
+	@if [ -z "$$FIREBASE_SERVICE_ACCOUNT_KEY" ]; then \
+		echo "$(YELLOW)⚠️  FIREBASE_SERVICE_ACCOUNT_KEY environment variable not set$(NC)"; \
+		echo "$(YELLOW)Set it with: export FIREBASE_SERVICE_ACCOUNT_KEY=\$$(cat path/to/service-account.json)$(NC)"; \
+		exit 1; \
+	fi
+	@dagger -m "$(CI_DAGGER_DIR)" call docs deploy --service-account-key=env:FIREBASE_SERVICE_ACCOUNT_KEY
+	@echo "$(GREEN)✅ Documentation deployed successfully$(NC)"
+
 docs-clean: ## Remove build artifacts
 	@echo "$(BLUE)🧹 Cleaning build artifacts...$(NC)"
 	@rm -rf site
@@ -54,3 +65,4 @@ docs-clean: ## Remove build artifacts
 serve: docs-serve ## Alias for docs-serve
 build: docs-build ## Alias for docs-build
 test: docs-test ## Alias for docs-test
+deploy: docs-deploy ## Alias for docs-deploy
