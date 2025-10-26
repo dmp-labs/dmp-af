@@ -89,10 +89,10 @@ class DbtTest(DbtBaseActionOperator):
         return 'test'
 
     def __init__(
-            self,
-            dmp_af_config: 'Config',
-            target_environment: str,
-            **kwargs
+        self,
+        dmp_af_config: 'Config',
+        target_environment: str,
+        **kwargs
     ) -> None:
         super().__init__(
             dmp_af_config=dmp_af_config,
