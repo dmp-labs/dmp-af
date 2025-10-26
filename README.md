@@ -122,7 +122,7 @@ Check out the documentation for more details [here](docs/docs.md).
 
 ## Project Information
 
-- [Docs](docs/docs.md)
+- [Docs](https://docs.dmp.af)
 - [PyPI](https://pypi.org/project/dmp-af/)
 - [Contributing](CONTRIBUTING.md)
 - [Original dbt-af Project](https://github.com/Toloka/dbt-af)

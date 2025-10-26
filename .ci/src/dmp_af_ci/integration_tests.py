@@ -94,11 +94,13 @@ class IntegrationTests:
         """
         pendulum_version = 2 if airflow_version < Version('2.8.0') else 3
         pydantic_upper_version = 2 if airflow_version < Version('2.7.0') else 3
+        python_semantic_release_upper_version = 8 if pydantic_upper_version == 2 else 10
 
         return (
             env.with_workdir('/dmp_af')
             # remove airflow from main project dependencies to install it from constraints
             .with_exec(['uv', 'remove', 'apache-airflow', 'pydantic'])
+            .with_exec(['uv', 'remove', 'python-semantic-release', '--group', 'release'])
             # add pendulum and pluggy to main project dependencies
             .with_exec(
                 [
@@ -110,6 +112,8 @@ class IntegrationTests:
                     'pluggy>=1.3.0',
                     # pydantic v2.12.0 is incompatible with airflow<2.7.0
                     f'pydantic>=1.10,<{pydantic_upper_version}',
+                    # python-semantic-release v8.1.0 is incompatible with pydantic v2
+                    f'python-semantic-release<{python_semantic_release_upper_version}',
                 ]
             )
             .with_exec(['uv', 'lock'])
