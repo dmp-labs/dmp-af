@@ -1,7 +1,6 @@
 site_name: dmp-af
 site_description: Distributed dbt runs on Apache Airflow
 site_author: IJKOS & PARTNERS LTD
-site_url: https://docs.dmp-labs.com
 
 repo_name: dmp-labs/dmp-af
 repo_url: https://github.com/dmp-labs/dmp-af

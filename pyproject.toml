@@ -148,10 +148,11 @@ changelog_sections = "feature,fix,breaking,documentation,performance,refactor"
 
 # Commit parsing
 major_on_zero = false
-allow_zero_version = false
+allow_zero_version = true
 
 [tool.semantic_release.changelog]
-template_dir = "templates"
+mode = "update"
+insertion_flag = "<!--next-version-placeholder-->"
 exclude_commit_patterns = [
     "^chore\\(release\\):",
     "^Merge",

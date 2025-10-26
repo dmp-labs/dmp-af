@@ -2,16 +2,24 @@
 
 Thank you for your interest in contributing to dmp-af!
 
+## Quick Links
+
+📖 **[Full Contributing Guide](docs/development/contributing.md)** - Detailed guide with PR workflow, code style, commit messages, and testing
+
+📋 **[Release Process](docs/development/releases.md)** - How semantic versioning and releases work
+
+🧪 **[Testing Guide](docs/development/testing.md)** - Running tests with Dagger
+
 ## About This Project
 
 This project is a fork of [dbt-af](https://github.com/Toloka/dbt-af) by Toloka AI BV, maintained by IJKOS & PARTNERS LTD. We welcome contributions from the community.
 
-## How to Contribute
+## Quick Start
 
 ### Reporting Issues
 
 If you find a bug or have a feature request:
-1. Check if the issue already exists in the [Issues](https://github.com/ijkos/dmp-af/issues) section
+1. Check if the issue already exists in the [Issues](https://github.com/dmp-labs/dmp-af/issues) section
 2. If not, create a new issue with a clear description
 3. Include relevant details such as:
    - Steps to reproduce (for bugs)
@@ -20,20 +28,16 @@ If you find a bug or have a feature request:
 
 ### Submitting Pull Requests
 
-1. Fork the repository
-2. Create a new branch for your feature or fix:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. Make your changes
-4. Write or update tests as needed
-5. Ensure all tests pass
-6. Commit your changes with clear, descriptive commit messages
-7. Push to your fork and submit a pull request
+1. Fork the repository and create a feature branch
+2. Make your changes following our [code style guidelines](docs/development/contributing.md#code-style)
+3. Write tests and ensure they pass
+4. Use [conventional commit messages](docs/development/contributing.md#commit-messages) (e.g., `feat:`, `fix:`)
+5. Update documentation as needed
+6. Submit a PR and fill out the template
+
+See the [full PR workflow guide](docs/development/contributing.md#submitting-pull-requests) for details.
 
 ### Development Setup
-
-To set up your development environment:
 
 ```bash
 # Clone your fork
@@ -43,30 +47,14 @@ cd dmp-af
 # Install dependencies using uv (recommended)
 uv sync --all-packages --all-groups --all-extras
 
-# Or using pip
-pip install -e ".[dev]"
+# Install pre-commit hooks (validates commit messages)
+uv run pre-commit install --hook-type commit-msg
 ```
 
-### Code Style
-
-- Follow the existing code style in the project
-- Use `ruff` for linting (configured in `pyproject.toml`)
-- Write clear, descriptive variable and function names
-- Add docstrings to public functions and classes
-
-### Testing
-
-This project uses [Dagger](https://dagger.io/) for running tests in isolated containers to ensure consistency across different environments.
-
-#### Running Tests Locally
-
-**Prerequisites:**
-- Install [Dagger CLI](https://docs.dagger.io/install)
-
-**Run tests for a specific configuration:**
+### Running Tests
 
 ```bash
-# Test with specific Python, Airflow, and dbt versions
+# Test with specific versions using Dagger
 dagger call -m ./.ci tests test-one-versions-combination \
   --python-version=3.12 \
   --airflow-version=2.11.0 \
@@ -74,30 +62,30 @@ dagger call -m ./.ci tests test-one-versions-combination \
   --with-running-airflow-tasks
 ```
 
-**Run tests for all supported configurations:**
+See the [full testing guide](docs/development/testing.md) for more options.
 
-```bash
-# Get the test matrix
-dagger call -m ./.ci tests get-versions-matrix export --path=./matrix.json
+## Key Guidelines
 
-# Run tests for each configuration in the matrix
-# (See .github/workflows/integration_tests.yml for the full automation)
-```
+✅ **Good PRs include:**
+- Clear, meaningful description of changes
+- Tests that prove the fix/feature works
+- Updated documentation (docstrings, guides, README if needed)
+- Conventional commit messages for automatic versioning
+- Context about why the change is needed
 
-#### Quick Local Testing (without Dagger)
-
-For quick iteration during development, you can also run tests directly with pytest:
-
-```bash
-pytest
-```
-
-Note: The CI pipeline uses Dagger to test against multiple Python, Airflow, and dbt versions. Make sure your changes pass the full test suite before submitting a pull request.
+❌ **PRs may be rejected if they:**
+- Lack tests for new functionality
+- Break existing tests
+- Don't follow code style guidelines
+- Lack documentation updates
+- Have unclear or missing descriptions
+- Use non-conventional commit messages
 
 ## Questions?
 
 If you have questions about contributing, feel free to:
 - Open an issue for discussion
+- Check the [full contributing guide](docs/development/contributing.md)
 - Contact the maintainers
 
 ## License

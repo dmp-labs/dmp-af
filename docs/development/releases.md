@@ -174,10 +174,14 @@ uv sync --group release
 # Preview next version
 uvx --from python-semantic-release semantic-release version --print
 
-# Show what would change
+# Show next version tag
 uvx --from python-semantic-release semantic-release version --print-tag
+
+# Show last released version
 uvx --from python-semantic-release semantic-release version --print-last-released
-uvx --from python-semantic-release semantic-release changelog --unreleased
+
+# Dry run (no commits/tags, but builds package)
+uvx --from python-semantic-release semantic-release version --no-commit --no-tag --no-push
 ```
 
 ## Troubleshooting
@@ -252,7 +256,8 @@ Configuration is in `pyproject.toml` under `[tool.semantic_release]`. Key settin
 - `branch = "main"`: Release from main branch
 - `version_variables`: Where to update version in code
 - `changelog_file`: Path to changelog
-- `major_on_zero = false`: Allow 0.x.y versions without forcing 1.0.0
+- `allow_zero_version = true`: Allow 0.x.y versions (set to `false` to force 1.0.0+)
+- `major_on_zero = false`: Breaking changes in 0.x.y bump minor version (0.1.0 → 0.2.0) instead of major
 - `commit_parser_options`: Define which commit types trigger releases
 
 ## Resources
