@@ -88,11 +88,16 @@ class DbtTest(DbtBaseActionOperator):
     def cli_command(self) -> str:
         return 'test'
 
-    def __init__(self, dmp_af_config: 'Config', **kwargs) -> None:
+    def __init__(
+            self,
+            dmp_af_config: 'Config',
+            target_environment: str,
+            **kwargs
+    ) -> None:
         super().__init__(
             dmp_af_config=dmp_af_config,
             max_active_tis_per_dag=None,
-            target_environment=dmp_af_config.dbt_default_targets.default_for_tests_target,
+            target_environment=target_environment or dmp_af_config.dbt_default_targets.default_target,
             retry_policy=dmp_af_config.retries_config.dbt_test_retry_policy,
             overlap=True,
             **kwargs,
