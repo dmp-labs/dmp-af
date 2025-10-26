@@ -23,16 +23,28 @@ First clone [dmp-af repository](https://github.com/dmp-labs/dmp-af)
 git clone git@github.com:dmp-labs/dmp-af.git dmp-af
 ```
 
-Navigate to `examples` directory:
+Navigate to `examples` directory and start Airflow:
 
 ```bash
 cd dmp-af/examples
-docker-compose up -d
+
+# Start Airflow 2.x (stable)
+./manage-airflow.sh up 2
+
+# Or start Airflow 3.x (latest)
+./manage-airflow.sh up 3
 ```
+
+The script automatically:
+
+- Creates `.env` file with OS-specific settings
+- Builds dbt manifest
+- Starts all Docker services
+- Creates required Airflow pools
 
 This starts:
 
-- Airflow webserver (http://localhost:8080)
+- Airflow webserver/API server (http://localhost:8080)
 - Airflow scheduler
 - PostgreSQL database
 - All required services
@@ -71,7 +83,7 @@ airflow scheduler &
 
 ## Step 2: Build the dbt manifest
 
-Run the build script:
+If you used the `manage-airflow.sh` script, the dbt manifest is already built automatically. Otherwise, build it manually:
 
 ```bash
 cd dags
