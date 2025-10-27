@@ -31,6 +31,7 @@ dependencies = [
     "virtualenv >=20.27.0", # https://github.com/pypa/virtualenv/pull/2782
     "pytest >=7.4.0",
     "pytest-env >=1.0.0",
+    "dotenv>=0.9.9",
 ]
 
 [tool.hatch.version]
@@ -91,6 +92,7 @@ Documentation = "https://dmp-labs.github.io/dmp-af/"
 [project.scripts]
 dmp-af-manifest-tests = "dmp_af_functional_tests:cli"
 mini_dbt_project_generator = "scripts.mini_dbt_project_generator:cli"
+dmp = "dmp_af.cli.cli:cli"
 
 [build-system]
 requires = ["hatchling"]
