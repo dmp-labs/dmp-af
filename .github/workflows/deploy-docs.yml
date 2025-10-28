@@ -10,6 +10,8 @@ on:
       - '.github/workflows/deploy-docs.yml'
       - 'firebase.json'
       - '.firebaserc'
+    tags:
+      - 'v*'
   workflow_dispatch:
   schedule:
     # Run every Monday at 9:00 AM UTC
