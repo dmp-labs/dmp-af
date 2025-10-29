@@ -105,12 +105,21 @@ plugins:
   - minify:
       minify_html: true
 
+# Exclude files from build
+exclude_docs: |
+  BUILD.md
+
 # Validation settings
 validation:
-  # Allow links to files outside the docs directory (like examples/)
+  # Strict validation for CI/CD - catch all link issues
+  nav:
+    omitted_files: warn
+    not_found: warn
+    absolute_links: warn
   links:
     not_found: warn
     absolute_links: warn
+    unrecognized_links: warn
 
 nav:
   - Home: index.md

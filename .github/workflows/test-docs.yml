@@ -1,0 +1,32 @@
+name: Test Documentation
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.ci/src/dmp_af_ci/docs.py'
+      - '.github/workflows/test-docs.yml'
+      - 'firebase.json'
+      - '.firebaserc'
+      - 'pyproject.toml'
+
+concurrency:
+  group: test-docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-docs:
+    name: Test Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test Documentation Build (Strict Mode)
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          module: ./.ci
+          args: docs test
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
