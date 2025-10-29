@@ -3,11 +3,7 @@
 ## Table of Contents
 
 - [Monte carlo Data](#monte-carlo-data)
-    - [Installation](#installation)
-    - [Configuration](#configuration)
 - [Tableau](#tableau)
-    - [Installation](#installation-1)
-    - [Configuration](#configuration-1)
 
 ## Monte carlo Data
 

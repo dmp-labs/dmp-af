@@ -31,8 +31,8 @@ In this tutorial, we will cover available tasks for _Databricks_.
 !!! warning 
     Dbt macros will be moved to separate package in the future.
 
-!!! tip 
-    To use the maintenance tasks in your project, you need to copy files from [macros](dags/macros) directory to your dbt project.
+!!! tip
+    To use the maintenance tasks in your project, you need to copy files from the [examples/dags/macros](https://github.com/dmp-labs/dmp-af/tree/main/examples/dags/macros) directory to your dbt project.
 
 ### Databricks maintenance tasks
 
