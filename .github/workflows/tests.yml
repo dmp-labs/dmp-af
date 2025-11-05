@@ -18,7 +18,7 @@ jobs:
 
       - name: Get matrix
         id: get_matrix
-        uses: dagger/dagger-for-github@v8.2.0
+        uses: ./.github/actions/run-dagger
         with:
           version: ${{ vars.DAGGER_CORE_VERSION }}
           module: ./.ci
@@ -40,19 +40,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test airflow v2
-        uses: dagger/dagger-for-github@v8.2.0
+        uses: ./.github/actions/run-dagger
         with:
           version: ${{ vars.DAGGER_CORE_VERSION }}
           module: ./.ci
-          dagger-flags: --progress plain --verbose=0
           args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=2.11.0 --dbt-version=1.10 --with-running-airflow-tasks
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
 
       - name: Test airflow v3
-        uses: dagger/dagger-for-github@v8.2.0
+        uses: ./.github/actions/run-dagger
         with:
           version: ${{ vars.DAGGER_CORE_VERSION }}
           module: ./.ci
-          dagger-flags: --progress plain --verbose=0
           args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=3.1.2 --dbt-version=1.10 --with-running-airflow-tasks
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}

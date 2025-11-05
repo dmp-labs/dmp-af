@@ -1,0 +1,68 @@
+name: 'Run Dagger'
+description: 'Install Dagger and run commands without stdout buffering issues'
+
+inputs:
+  version:
+    description: 'Dagger version to install (e.g., "0.19.4" or "latest")'
+    required: false
+    default: 'latest'
+  module:
+    description: 'Dagger module path (e.g., "./.ci")'
+    required: true
+  args:
+    description: 'Arguments to pass to dagger call (e.g., "tests test-one-versions-combination --python-version=3.12")'
+    required: true
+  cloud-token:
+    description: 'Dagger Cloud token for telemetry'
+    required: false
+  workdir:
+    description: 'Working directory to run dagger from'
+    required: false
+    default: '.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Dagger
+      shell: bash
+      run: |
+        # Determine installation directory
+        if [ -n "$RUNNER_TEMP" ]; then
+          BIN_DIR="$RUNNER_TEMP/dagger-bin"
+        else
+          BIN_DIR="$(mktemp -d)/dagger-bin"
+        fi
+
+        mkdir -p "$BIN_DIR"
+
+        # Check if dagger is already installed
+        INSTALL_DAGGER=true
+        if command -v dagger &> /dev/null; then
+          INSTALLED_VERSION=$(dagger version | head -n1 | awk '{print $2}' | sed 's/^v//')
+          if [ "${{ inputs.version }}" = "latest" ] || [ "${{ inputs.version }}" = "$INSTALLED_VERSION" ]; then
+            echo "Dagger $INSTALLED_VERSION already installed"
+            INSTALL_DAGGER=false
+          fi
+        fi
+
+        # Install Dagger if needed
+        if [ "$INSTALL_DAGGER" = true ]; then
+          echo "Installing Dagger ${{ inputs.version }}..."
+          export DAGGER_VERSION="${{ inputs.version }}"
+          curl -fsSL https://dl.dagger.io/dagger/install.sh | BIN_DIR="$BIN_DIR" sh
+          echo "$BIN_DIR" >> $GITHUB_PATH
+        fi
+
+    - name: Setup Dagger Cloud
+      if: inputs.cloud-token != ''
+      shell: bash
+      run: |
+        echo "DAGGER_CLOUD_TOKEN=${{ inputs.cloud-token }}" >> $GITHUB_ENV
+
+    - name: Run Dagger
+      shell: bash
+      working-directory: ${{ inputs.workdir }}
+      run: |
+        # Run dagger without capturing stdout to avoid GitHub annotation limits
+        # Output goes directly to GitHub Actions logs
+        dagger --progress plain call -m ${{ inputs.module }} ${{ inputs.args }}
