@@ -54,3 +54,15 @@ jobs:
           module: ./.ci
           args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=3.1.2 --dbt-version=1.10 --with-running-airflow-tasks
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+
+      - name: Probe step outputs size (after dagger step)
+        if: always()
+        shell: bash
+        run: |
+          # Print keys & sizes of all step outputs this job knows about
+          jq -r '
+            .steps
+            | to_entries[]
+            | select(.value.outputs != null)
+            | "\(.key) -> " + ( (.value.outputs | tojson | length | tostring) ) + " chars"
+          ' <<< '${{ toJSON(steps) }}' || true
