@@ -9,12 +9,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  get-python-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      python-versions: ${{ steps.extract_python.outputs.python-versions }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get matrix
+        id: get_matrix
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          version: "latest"
+          module: ./.ci
+          args: tests get-versions-matrix export --path=./matrix.json
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+
+      - name: Extract Python versions
+        id: extract_python
+        run: |
+          echo "python-versions=$(jq -c '.python' ./matrix.json)" >> $GITHUB_OUTPUT
+
   test:
+    needs: get-python-versions
     runs-on: [ ubuntu-latest ]
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ '3.10', '3.11', '3.12' ]
+        python-version: ${{ fromJSON(needs.get-python-versions.outputs.python-versions) }}
     steps:
       - uses: actions/checkout@v4
       - name: Test airflow v2
@@ -30,5 +52,5 @@ jobs:
         with:
           version: "latest"
           module: ./.ci
-          args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=3.0.6 --dbt-version=1.10 --with-running-airflow-tasks
+          args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=3.1.2 --dbt-version=1.10 --with-running-airflow-tasks
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}

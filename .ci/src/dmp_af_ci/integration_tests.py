@@ -7,7 +7,7 @@ import dagger
 from dagger import DefaultPath, Doc, dag, function, object_type
 from packaging.version import Version
 
-PYTHON_VERSIONS = [Version('3.10'), Version('3.11'), Version('3.12')]
+PYTHON_VERSIONS = [Version('3.10'), Version('3.11'), Version('3.12'), Version('3.13')]
 DBT_VERSIONS = [
     Version('1.7'),
     Version('1.8'),
@@ -24,6 +24,7 @@ AIRFLOW_2_VERSIONS = [
 ]
 AIRFLOW_3_VERSIONS = [
     Version('3.0.6'),
+    Version('3.1.2'),
 ]
 
 UV_VERSION = '0.8.19'
@@ -308,6 +309,8 @@ class IntegrationTests:
         Tests one version combination.
         """
         if Version(airflow_version) < Version('2.9.0') and Version(python_version) > Version('3.11'):
+            return 'skipped'
+        if Version(python_version) >= Version('3.13') and Version(airflow_version) < Version('3.1.2'):
             return 'skipped'
 
         return await self._test_one_versions_combination_impl(
