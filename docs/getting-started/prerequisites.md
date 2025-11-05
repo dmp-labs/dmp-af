@@ -14,6 +14,8 @@ dmp-af is tested and verified to work with the following version combinations:
 | 2.9.3           | ≥3.10, <3.13    | ≥1.7, ≤1.10       |
 | 2.10.5          | ≥3.10, <3.13    | ≥1.7, ≤1.10       |
 | 2.11.0          | ≥3.10, <3.13    | ≥1.7, ≤1.10       |
+| 3.0.6           | ≥3.10, <3.13    | ≥1.7, ≤1.10       |
+| 3.1.2           | ≥3.10, <3.14    | ≥1.7, ≤1.10       |
 
 !!! tip "Latest Versions"
     We recommend using the latest compatible versions of Airflow and dbt-core for the best experience.
