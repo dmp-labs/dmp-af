@@ -44,7 +44,7 @@ jobs:
         with:
           version: ${{ vars.DAGGER_CORE_VERSION }}
           module: ./.ci
-          dagger-flags: --progress plain -q
+          dagger-flags: --progress plain --verbose=0
           args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=2.11.0 --dbt-version=1.10 --with-running-airflow-tasks
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
 
@@ -53,6 +53,6 @@ jobs:
         with:
           version: ${{ vars.DAGGER_CORE_VERSION }}
           module: ./.ci
-          dagger-flags: --progress plain -q
+          dagger-flags: --progress plain --verbose=0
           args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=3.1.2 --dbt-version=1.10 --with-running-airflow-tasks
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
