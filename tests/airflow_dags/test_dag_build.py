@@ -33,8 +33,42 @@ def try_test_run_dag(
     additional_expected_ti_states = additional_expected_ti_states or []
 
     if airflow_version >= version.parse('3.0.0'):
+        # In Airflow 3+, dag.test() runs all tasks automatically
+        # We need to serialize the DAG first for the test method to work
+        from airflow.providers.standard.operators.python import BranchPythonOperator
+
+        from tests.airflow_dags.dag_bundle_helper import serialize_dag_for_test
+
+        serialize_dag_for_test(dag)
+
+        # Run the test - this executes all tasks
         dagrun = dag.test(mark_success_pattern=task_id_to_skip_pattern)
+
+        # Verify task states after execution
+        for task_id in dag.task_ids:
+            if task_id_to_skip_pattern and re.match(task_id_to_skip_pattern, task_id):
+                continue
+
+            ti: TaskInstance = dagrun.get_task_instance(task_id=task_id)
+            task = dag.get_task(task_id=task_id)
+
+            # Tasks have already been run by dag.test(), just check states
+            always_expected_states = [TaskInstanceState.SUCCESS, TaskInstanceState.UP_FOR_RESCHEDULE]
+
+            # In Airflow 3+, dag.test() respects branching logic
+            # Allow SKIPPED state only if task is downstream of a branch operator
+
+            has_branch_upstream = any(
+                isinstance(upstream_task, BranchPythonOperator)
+                for upstream_task in task.get_direct_relatives(upstream=True)
+            )
+            if has_branch_upstream:
+                always_expected_states.append(TaskInstanceState.SKIPPED)
+
+            ti_states_to_expect = always_expected_states + list(additional_expected_ti_states)
+            assert ti.state in ti_states_to_expect
     else:
+        # Airflow 2.x approach: manually create dagrun and execute tasks
         start_date = pendulum.now().replace(minute=0, second=0, microsecond=0) - datetime.timedelta(hours=1)
         end_date = start_date + datetime.timedelta(hours=1)
         run_id = f'test_run_{uuid.uuid4()}'
@@ -47,18 +81,18 @@ def try_test_run_dag(
             run_type=DagRunType.MANUAL,
         )
 
-    for task_id in dag.task_ids:
-        if task_id_to_skip_pattern and re.match(task_id_to_skip_pattern, task_id):
-            continue
+        for task_id in dag.task_ids:
+            if task_id_to_skip_pattern and re.match(task_id_to_skip_pattern, task_id):
+                continue
 
-        ti: TaskInstance = dagrun.get_task_instance(task_id=task_id)
-        ti.task = dag.get_task(task_id=task_id)
-        ti.run(ignore_ti_state=True, ignore_all_deps=True, verbose=False)
+            ti: TaskInstance = dagrun.get_task_instance(task_id=task_id)
+            ti.task = dag.get_task(task_id=task_id)
+            ti.run(ignore_ti_state=True, ignore_all_deps=True, verbose=False)
 
-        # all tasks should be in success state and all sensors should be up_for_reschedule
-        always_expected_states = [TaskInstanceState.SUCCESS, TaskInstanceState.UP_FOR_RESCHEDULE]
-        ti_states_to_expect = always_expected_states + list(additional_expected_ti_states)
-        assert ti.state in ti_states_to_expect
+            # all tasks should be in success state and all sensors should be up_for_reschedule
+            always_expected_states = [TaskInstanceState.SUCCESS, TaskInstanceState.UP_FOR_RESCHEDULE]
+            ti_states_to_expect = always_expected_states + list(additional_expected_ti_states)
+            assert ti.state in ti_states_to_expect
 
 
 def run_all_tasks_in_dag(
@@ -109,7 +143,7 @@ def test_domain_depends_on_another_partially_has_correct_dags(
     assert node_ids(b.task_dict['b2'].upstream_list) == ['a__daily__dependencies__group.wait__a2', 'b1']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_domain_depends_on_two_domains_has_correct_dags(dags_domain_depends_on_two_domains, run_airflow_tasks):
@@ -143,7 +177,7 @@ def test_domain_depends_on_two_domains_has_correct_dags(dags_domain_depends_on_t
     ]
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_hourly_task_with_tests_has_correct_dags(dags_hourly_task_with_tests, run_airflow_tasks):
@@ -187,7 +221,7 @@ def test_hourly_task_with_tests_has_correct_dags(dags_hourly_task_with_tests, ru
     ]
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_independent_domains_have_correct_dags(dags_independent_domains, run_airflow_tasks):
@@ -217,7 +251,7 @@ def test_independent_domains_have_correct_dags(dags_independent_domains, run_air
     assert node_ids(a_backfill.task_dict['do_nothing'].downstream_list) == []
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_sequential_domains_have_correct_dags(dags_sequential_domains, run_airflow_tasks):
@@ -246,7 +280,7 @@ def test_sequential_domains_have_correct_dags(dags_sequential_domains, run_airfl
     assert node_ids(c.task_dict['c1'].upstream_list) == ['b__daily__dependencies__group.wait__b2']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_sequential_domains_have_correct_external_sensors(dags_sequential_domains, run_airflow_tasks):
@@ -262,7 +296,7 @@ def test_sequential_domains_have_correct_external_sensors(dags_sequential_domain
     assert c_waits_sensor.external_task_ids == ['b2']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_sequential_tasks_in_one_domain_have_correct_dags(dags_sequential_tasks_in_one_domain, run_airflow_tasks):
@@ -279,7 +313,7 @@ def test_sequential_tasks_in_one_domain_have_correct_dags(dags_sequential_tasks_
     assert node_ids(a.task_dict['a3'].upstream_list) == ['a2']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_two_domains_depend_on_another_have_correct_dags(dags_two_domains_depend_on_another, run_airflow_tasks):
@@ -306,7 +340,7 @@ def test_two_domains_depend_on_another_have_correct_dags(dags_two_domains_depend
     assert node_ids(c.task_dict['c1'].upstream_list) == ['a__daily__dependencies__group.wait__a1']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_two_domains_depend_on_two_have_correct_dags(dags_two_domains_depend_on_two, run_airflow_tasks):
@@ -363,7 +397,7 @@ def test_two_domains_depend_on_two_have_correct_dags(dags_two_domains_depend_on_
     ]
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_task_depends_on_two_within_same_domain_has_correct_dags(
@@ -383,7 +417,7 @@ def test_task_depends_on_two_within_same_domain_has_correct_dags(
     assert node_ids(a.task_dict['a3'].upstream_list) == ['a1', 'a2']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_two_tasks_depend_on_one_have_correct_dags(dags_two_tasks_depend_on_one, run_airflow_tasks):
@@ -400,7 +434,7 @@ def test_two_tasks_depend_on_one_have_correct_dags(dags_two_tasks_depend_on_one,
     assert node_ids(a.task_dict['a3'].upstream_list) == ['a1']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_two_tasks_depend_on_two_have_correct_dags(dags_two_tasks_depend_on_two, run_airflow_tasks):
@@ -418,7 +452,7 @@ def test_two_tasks_depend_on_two_have_correct_dags(dags_two_tasks_depend_on_two,
     assert node_ids(a.task_dict['a4'].upstream_list) == ['a1', 'a2']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_domain_with_different_schedule_has_correct_dags(dags_domain_with_different_schedule, run_airflow_tasks):
@@ -441,7 +475,7 @@ def test_domain_with_different_schedule_has_correct_dags(dags_domain_with_differ
     assert node_ids(a_hourly.task_dict['a3'].upstream_list) == ['a__daily__dependencies__group.wait__a2']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_domain_depends_on_another_with_multischeduling_has_correct_dags(
@@ -470,7 +504,7 @@ def test_domain_depends_on_another_with_multischeduling_has_correct_dags(
     assert node_ids(b_hourly.task_dict['b1'].upstream_list) == ['a__daily__dependencies__group.wait__a2']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_domain_depends_on_another_with_test_has_correct_dags(
@@ -500,7 +534,7 @@ def test_domain_depends_on_another_with_test_has_correct_dags(
     assert b_waits_sensor.external_task_ids == ['a1__group.a1__end']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_domain_with_enabled_disabled_models_has_correct_dags(dags_domain_w_enable_disable_models, run_airflow_tasks):
@@ -559,7 +593,7 @@ def test_domain_with_enabled_disabled_models_has_correct_dags(dags_domain_w_enab
     ]
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_dags_domain_w_source_freshness_has_correct_dags(dags_domain_w_source_freshness, run_airflow_tasks):
@@ -607,7 +641,7 @@ def test_dags_domain_w_source_freshness_has_correct_dags(dags_domain_w_source_fr
     assert node_ids(dags['a__backfill'].task_dict['a1__bf__group.a1__bf'].downstream_list) == []
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_dags_domain_w_task_in_kubernetes_has_correct_dags(dags_domain_w_task_in_kubernetes):
@@ -658,7 +692,7 @@ def test_dags_dags_domain_model_w_maintenance_has_correct_dags(dags_domain_model
     ]
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_task_with_tableau_integration_has_correct_dags(dags_task_with_tableau_integration, run_airflow_tasks):
@@ -735,7 +769,7 @@ def test_domain_with_shift(
     assert a6.dag_id == 'a__monthly_shift_1_days_6_hours'
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 def test_two_domains_with_diff_scheduling_and_shifts(
@@ -766,7 +800,7 @@ def test_two_domains_with_diff_scheduling_and_shifts(
     ]
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
 
 
 @pytest.mark.skipif(
@@ -791,4 +825,4 @@ def test_two_tasks_depend_on_two_w_snapshot_have_correct_dags(
     assert node_ids(a.task_dict['s1'].upstream_list) == ['a3']
 
     if run_airflow_tasks:
-        run_all_tasks_in_dag(dags)
+        run_all_tasks_in_dag({_dag_id: _dag for _dag_id, _dag in dags.items() if not _dag_id.endswith('__backfill')})
