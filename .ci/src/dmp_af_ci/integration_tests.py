@@ -198,6 +198,7 @@ class IntegrationTests:
             .with_directory('/dmp_af/dmp_af', source.directory('dmp_af'))
             .with_directory('/dmp_af/scripts', source.directory('scripts'))
             .with_directory('/dmp_af/tests', source.directory('tests'))
+            .with_directory('/dmp_af/examples', source.directory('examples'))
             .with_file('/dmp_af/pyproject.toml', source.file('pyproject.toml'))
             .with_file('/dmp_af/README.md', source.file('README.md'))
             # pin python version
@@ -273,6 +274,18 @@ class IntegrationTests:
                         'migrate' if airflow_version >= Version('2.7.0') else 'init',
                     ]
                 )
+                # generate manifest for validation tests
+                .with_env_variable('POSTGRES_HOST', 'db')
+                .with_env_variable('POSTGRES_PORT', '5432')
+                .with_env_variable('POSTGRES_USER', 'postgres')
+                .with_env_variable('POSTGRES_PASSWORD', 'postgres')
+                .with_env_variable('POSTGRES_DB', 'postgres')
+                .with_env_variable('POSTGRES_SCHEMA', 'public')
+                .with_env_variable('POSTGRES_THREADS', '1')
+                .with_workdir('/dmp_af/examples/dags')
+                .with_exec(['dbt', 'deps', '--project-dir', '.', '--profiles-dir', '.', '--target', 'dev'])
+                .with_exec(['dbt', 'parse', '--project-dir', '.', '--profiles-dir', '.', '--target', 'dev'])
+                .with_workdir('/dmp_af')
                 .with_exec(
                     [
                         'pytest',
