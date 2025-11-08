@@ -141,6 +141,7 @@ nav:
       - Maintenance Tasks: tutorials/maintenance.md
       - Python Virtual Environments: tutorials/python-venv.md
       - Kubernetes Tasks: tutorials/kubernetes.md
+      - Custom Validators: tutorials/custom-validators.md
       - Integrations: tutorials/integrations.md
 
   - Features:
@@ -151,6 +152,7 @@ nav:
       - Manual Run DAG: features/dbt-run-model-dag.md
       - Test Separation: features/tests-separation.md
       - Cross-Domain Dependencies: features/cross-domain-deps.md
+      - Validation Framework: features/validation.md
 
   - Configuration:
       - configuration/index.md

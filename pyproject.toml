@@ -92,7 +92,8 @@ Documentation = "https://dmp-labs.github.io/dmp-af/"
 "Source Code" = "https://github.com/dmp-labs/dmp-af"
 
 [project.scripts]
-dmp-af-manifest-tests = "dmp_af_functional_tests:cli"
+dmp-af = "dmp_af.cli:app"
+dmp-af-manifest-tests = "dmp_af.cli:app"  # Deprecated, use 'dmp-af validate' instead
 mini_dbt_project_generator = "scripts.mini_dbt_project_generator:cli"
 
 [build-system]

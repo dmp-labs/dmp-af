@@ -24,6 +24,9 @@ Separate small, medium, and large tests into different execution paths.
 ### [Cross-Domain Dependencies](cross-domain-deps.md)
 Models in different domains and schedules can depend on each other seamlessly.
 
+### [Validation Framework](validation.md)
+Validate dbt project configuration before deployment with extensible validation rules.
+
 ## Key Benefits
 
 - **Auto-Generated DAGs**: No manual DAG writing required
