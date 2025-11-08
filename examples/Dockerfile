@@ -13,7 +13,6 @@ RUN apt-get update --allow-releaseinfo-change \
 
 
 COPY ./dmp_af ${AIRFLOW_HOME}/dmp_af/dmp_af
-COPY ./dmp_af_functional_tests ${AIRFLOW_HOME}/dmp_af/dmp_af_functional_tests
 COPY ./scripts ${AIRFLOW_HOME}/dmp_af/scripts
 COPY ./pyproject.toml ${AIRFLOW_HOME}/dmp_af/pyproject.toml
 COPY ./uv.lock ${AIRFLOW_HOME}/dmp_af/uv.lock

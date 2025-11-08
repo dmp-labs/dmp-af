@@ -196,7 +196,6 @@ class IntegrationTests:
             .with_exec(['uv', '--version'])
             # copy source code
             .with_directory('/dmp_af/dmp_af', source.directory('dmp_af'))
-            .with_directory('/dmp_af/dmp_af_functional_tests', source.directory('dmp_af_functional_tests'))
             .with_directory('/dmp_af/scripts', source.directory('scripts'))
             .with_directory('/dmp_af/tests', source.directory('tests'))
             .with_file('/dmp_af/pyproject.toml', source.file('pyproject.toml'))

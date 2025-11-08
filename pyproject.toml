@@ -103,7 +103,6 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 packages = [
     "/dmp_af",
-    "/dmp_af_functional_tests",
     "/scripts",
 ]
 
