@@ -74,4 +74,4 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --all-groups --all-extras
-      - run: uv run mypy dmp_af --show-error-codes
+      - run: uv run mypy dmp_af --python-version=${{ matrix.python-version }} --show-error-codes

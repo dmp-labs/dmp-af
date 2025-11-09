@@ -9,7 +9,7 @@ from packaging.version import Version
 try:
     from airflow.operators.python import PythonVirtualenvOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.python import PythonVirtualenvOperator
+    from airflow.providers.standard.operators.python import PythonVirtualenvOperator  # type: ignore[no-redef]
 
 from dmp_af.conf import Config
 from dmp_af.parser.dbt_profiles import VenvTarget

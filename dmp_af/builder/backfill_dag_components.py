@@ -36,4 +36,4 @@ class BackfillDagModel(DagModel):
 
 
 class BackfillDagSnapshot(BackfillDagModel):
-    runner_class = DbtSnapshot
+    runner_class = DbtSnapshot  # type: ignore[assignment]

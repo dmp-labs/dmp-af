@@ -16,7 +16,7 @@ from airflow.utils.context import Context
 try:
     from airflow.operators.bash import BashOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.bash import BashOperator
+    from airflow.providers.standard.operators.bash import BashOperator  # type: ignore[no-redef]
 
 from dmp_af.common.constants import DBT_COMPILE_POOL
 from dmp_af.common.scheduling import BaseScheduleTag, EScheduleTag
@@ -94,7 +94,7 @@ class DbtBaseOperator(BashOperator):
     def _render_full_bash_command(self) -> None:
         raw_bash_options = ' '.join(f'{option} {value}' for option, value in self.bash_options.items() if value)
         raw_bash_flags = ' '.join(self.bash_flags)
-        self.bash_command += f' {raw_bash_options} {raw_bash_flags}'
+        self.bash_command += f' {raw_bash_options} {raw_bash_flags}'  # type: ignore[operator]
 
     def execute(self, context: Context):
         with TemporaryDirectory(dir=self.dmp_af_config.dbt_project.dbt_target_path) as tmp_target_path:

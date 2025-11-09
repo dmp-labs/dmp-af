@@ -34,7 +34,7 @@ class MaintenanceDagComponent(DagComponent):
                 schedule_tag=self.domain_dag.schedule,
                 maintenance_type=self.maintenance_type,
                 task_group=self.af_component,
-                af_dag=self.domain_dag.af_dag,
+                af_dag=self.domain_dag.af_dag,  # type: ignore[arg-type]
                 maintenance_config=model_name.config.maintenance,
                 dmp_af_config=self.domain_dag.config,
             )

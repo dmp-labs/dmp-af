@@ -6,14 +6,14 @@ if TYPE_CHECKING:
     try:
         from airflow.models.dag import DAG
     except (ModuleNotFoundError, ImportError):
-        from airflow.sdk import DAG
+        from airflow.sdk import DAG  # type: ignore[no-redef]
 
 try:
     from airflow.operators.empty import EmptyOperator
     from airflow.operators.python import BranchPythonOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.empty import EmptyOperator
-    from airflow.providers.standard.operators.python import BranchPythonOperator
+    from airflow.providers.standard.operators.empty import EmptyOperator  # type: ignore[no-redef]
+    from airflow.providers.standard.operators.python import BranchPythonOperator  # type: ignore[no-redef]
 
 from dmp_af.builder.task_dependencies import RegistryDomainDependencies
 from dmp_af.common import constants

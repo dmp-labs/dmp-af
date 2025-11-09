@@ -18,9 +18,9 @@ try:
     from airflow.sensors.external_task import ExternalTaskSensor
     from airflow.sensors.python import PythonSensor
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.hooks.subprocess import SubprocessHook
-    from airflow.providers.standard.sensors.external_task import ExternalTaskSensor
-    from airflow.providers.standard.sensors.python import PythonSensor
+    from airflow.providers.standard.hooks.subprocess import SubprocessHook  # type: ignore[no-redef]
+    from airflow.providers.standard.sensors.external_task import ExternalTaskSensor  # type: ignore[no-redef]
+    from airflow.providers.standard.sensors.python import PythonSensor  # type: ignore[no-redef]
 
 from dmp_af.common.af_scheduling_utils import (
     GLOBAL_TASK_SCHEDULE_MAPPINGS,

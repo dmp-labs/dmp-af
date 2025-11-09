@@ -29,7 +29,7 @@ class DagDelayedDependencyStream:
     It represents a dependency between two tasks in Airflow DAG using >> and << operators.
     """
 
-    def __init__(self, stream: BaseOperator, registry):
+    def __init__(self, stream: BaseOperator | TaskGroup, registry):
         self.stream = stream
         self.registry = registry
 
@@ -37,7 +37,7 @@ class DagDelayedDependencyStream:
         if not isinstance(other, DagDelayedDependencyStream):
             raise TypeError(f'Cannot create dependency between {self} and {other}')
         if self.stream is None or other.stream is None:
-            return self
+            return self  # type: ignore[unreachable]
 
         self.registry.register(self.stream, other.stream)
         return self
@@ -46,7 +46,7 @@ class DagDelayedDependencyStream:
         if not isinstance(other, DagDelayedDependencyStream):
             raise TypeError(f'Cannot create dependency between {self} and {other}')
         if self.stream is None or other.stream is None:
-            return self
+            return self  # type: ignore[unreachable]
 
         self.registry.register(other.stream, self.stream)
         return self
