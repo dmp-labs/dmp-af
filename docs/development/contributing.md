@@ -93,9 +93,37 @@ pip install -e ".[dev]"
 ### Code Style
 
 - Follow the existing code style in the project
-- Use `ruff` for linting (configured in `pyproject.toml`)
+- Use `ruff` for linting and formatting (configured in `pyproject.toml`)
+- Use `mypy` for static type checking (configured in `pyproject.toml`)
 - Write clear, descriptive variable and function names
 - Add docstrings to public functions and classes
+- Add type hints to function signatures
+
+**Run code quality checks:**
+```bash
+# Format code
+uv run ruff format .
+
+# Lint code
+uv run ruff check --fix .
+
+# Type check
+uv run mypy dmp_af
+
+# Run all pre-commit hooks
+uv run pre-commit run --all-files
+```
+
+**Install pre-commit hooks** (recommended):
+```bash
+# Install all hooks (formatting, linting, type checking)
+uv run pre-commit install
+
+# Install commit message validation
+uv run pre-commit install --hook-type commit-msg
+```
+
+Hooks will run automatically on `git commit`.
 
 ### Commit Messages
 
