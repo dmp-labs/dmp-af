@@ -6,7 +6,7 @@ from dmp_af.conf import Config
 
 def prepare_custom_af_callbacks(
     config: Config,
-) -> tuple[dict[str, tuple[Callable[..., Any]]], dict[str, tuple[Callable[..., Any]]]]:
+) -> tuple[dict[str, tuple[Callable[..., Any], ...]], dict[str, tuple[Callable[..., Any], ...]]]:
     if config.af_callbacks is None:
         logging.warning('No callback were passed')
         return {}, {}

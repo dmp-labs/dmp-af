@@ -9,7 +9,7 @@ import pendulum
 try:
     import pydantic.v1 as pydantic
 except ModuleNotFoundError:
-    import pydantic
+    import pydantic  # type: ignore[no-redef]
 
 from dmp_af.common.constants import DOMAIN_DAG_START_DATE_FMT
 from dmp_af.common.scheduling import BaseScheduleTag, EScheduleTag
@@ -288,16 +288,16 @@ class DbtNode(pydantic.BaseModel):
 
     @property
     def depends_on(self):
-        return [
-            dep for dep in self.node_depends_on['nodes'] if dep.startswith(('test.', 'model.', 'snapshot.', 'seed.'))
-        ]
+        nodes = (self.node_depends_on or {}).get('nodes', [])
+        return [dep for dep in nodes if dep.startswith(('test.', 'model.', 'snapshot.', 'seed.'))]
 
     @property
     def depends_on_sources(self):
-        return [dep for dep in self.node_depends_on['nodes'] if dep.startswith('source.')]
+        nodes = (self.node_depends_on or {}).get('nodes', [])
+        return [dep for dep in nodes if dep.startswith('source.')]
 
     @property
-    def materialized(self):
+    def materialized(self) -> str | None:
         return self.config.materialized if self.resource_type == 'model' else ''
 
     @property
@@ -329,13 +329,13 @@ class DbtNode(pydantic.BaseModel):
         if self.is_test():
             return default_dbt_targets.default_for_tests_target
 
-        if len(self.config.pre_hook) == 0 and self.model_type == 'sql':
+        if len(self.config.pre_hook or []) == 0 and self.model_type == 'sql':
             if self.config.schedule in (EScheduleTag.daily(), EScheduleTag.weekly()):
-                return self.config.daily_sql_cluster
+                return self.config.daily_sql_cluster or ''
 
-            return self.config.sql_cluster
+            return self.config.sql_cluster or ''
 
-        return self.config.py_cluster
+        return self.config.py_cluster or ''
 
     @property
     def original_file_path_dirname(self) -> str:
@@ -386,12 +386,10 @@ class DbtNode(pydantic.BaseModel):
             return False
         if isinstance(self.config.partition_by, str):
             return '_dt' in self.config.partition_by or self.config.partition_by in whitelisted_dt_partitions
-        if isinstance(self.config.partition_by, list):
-            return '_dt' in ''.join(self.config.partition_by) or not whitelisted_dt_partitions.isdisjoint(
-                self.config.partition_by
-            )
-
-        return False
+        # partition_by is a list
+        return '_dt' in ''.join(self.config.partition_by) or not whitelisted_dt_partitions.isdisjoint(
+            self.config.partition_by
+        )
 
     def get_airflow_parallelism(self) -> int:
         if self.materialized != 'incremental' or not self.has_dt_partition():

@@ -22,7 +22,7 @@ def _tableau_extracts_refresh_dev(*args, **kwargs) -> None:
 
 
 class TableauExtractsRefreshOperator(PythonOperator):
-    template_fields = tuple()
+    template_fields: tuple[str, ...] = tuple()
 
     def __init__(self, tableau_refresh_tasks: 'list[TableauRefreshTaskConfig]', dmp_af_config: Config, **kwargs):
         if not is_tableau_installed():

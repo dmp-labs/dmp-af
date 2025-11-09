@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Generator, Optional
+from typing import Any, Callable, Generator, Optional
 
 from airflow.utils.task_group import TaskGroup
 
@@ -17,7 +17,7 @@ from dmp_af.operators.run import DbtRun, DbtSeed, DbtSnapshot, DbtTest
 from dmp_af.operators.sensors import AfExecutionDateFn, DbtExternalSensor, DbtSourceFreshnessSensor
 from dmp_af.operators.supplemental import TableauExtractsRefreshOperator
 from dmp_af.operators.venv import DbtPythonVenvOperator
-from dmp_af.parser.dbt_node_model import DbtNode, DbtNodeConfig
+from dmp_af.parser.dbt_node_model import DbtNode, DbtNodeConfig, WaitPolicy
 from dmp_af.parser.dbt_profiles import KubernetesTarget, VenvTarget
 from dmp_af.parser.dbt_source_model import DbtSource
 
@@ -42,7 +42,7 @@ class DagComponent:
         self.model_task: Optional[DbtRun | DbtKubernetesPodOperator] = None
         self.task_group: Optional[TaskGroup] = None
         self.af_sensor_endpoint: Optional[EmptyOperator | DbtRun | DbtKubernetesPodOperator] = None
-        self._af_callbacks: dict[str, list[Optional[callable]]] = {}
+        self._af_callbacks: dict[str, list[Callable[..., Any] | None]] = {}
 
     @property
     def depends_on(self) -> list['DagComponent']:
@@ -52,11 +52,11 @@ class DagComponent:
     def safe_name(self) -> str:
         return self.name.replace('.', '__')
 
-    def add_af_callbacks(self, callbacks: dict[str, list[Optional[callable]]]):
+    def add_af_callbacks(self, callbacks: dict[str, list[Callable[..., Any] | None]]):
         self._af_callbacks.update(callbacks)
 
     def add_dependency(self, dep: 'DagComponent'):
-        if self.node_config.dependencies[dep.name].skip:
+        if self.node_config.dependencies and self.node_config.dependencies[dep.name].skip:
             return
 
         self._depends_on.add(dep)
@@ -92,16 +92,28 @@ class DagComponent:
         dep: 'DagComponent',
         task_group: TaskGroup,
     ) -> Generator[DbtExternalSensor, None, None]:
+        wait_policy = (
+            self.node_config.dependencies[dep.name].wait_policy if self.node_config.dependencies else WaitPolicy.last
+        )
         execution_date_fns = AfExecutionDateFn(
             upstream_schedule_tag=dep.domain_dag.schedule,
             downstream_schedule_tag=self.domain_dag.schedule,
-            wait_policy=self.node_config.dependencies[dep.name].wait_policy,
+            wait_policy=wait_policy,
         ).get_execution_dates()
 
         for i, execution_date_fn in enumerate(execution_date_fns):
+            # Skip None execution_date_fn (shouldn't happen, but type-safe)
+            if execution_date_fn is None:
+                continue
+
             # airflow task_id for statsd must be less than 250 chars.
             # it's not necessary to have a long name for the only one external dependency wait
             _suffix = f'__{i}' if len(execution_date_fns) > 1 else ''
+
+            # By this point, all DAGs should be initialized
+            assert dep.domain_dag.af_dag is not None, f'DAG not initialized for {dep.name}'
+            assert dep.af_sensor_endpoint is not None, f'Sensor endpoint not set for {dep.name}'
+
             wait = DbtExternalSensor(
                 dmp_af_config=self.domain_dag.config,
                 task_id=f'wait__{dep.safe_name}{_suffix}',
@@ -256,6 +268,9 @@ class DagModel(DagComponent):
         Create a k8s operator to run the dbt model not in DWH but in a k8s pod
         It's used only in rare cases when model requires a lot of resources and/or data processing on the same node
         """
+        assert isinstance(
+            self.dbt_node.target_details, KubernetesTarget
+        ), f'K8s runner requires KubernetesTarget, got {type(self.dbt_node.target_details)}'
         return DbtKubernetesPodOperator(
             task_id=self.safe_name,
             dbt_model_name=self.name,
@@ -268,6 +283,9 @@ class DagModel(DagComponent):
         )
 
     def _create_venv_runner_task(self) -> DbtPythonVenvOperator:
+        assert isinstance(
+            self.dbt_node.target_details, VenvTarget
+        ), f'Venv runner requires VenvTarget, got {type(self.dbt_node.target_details)}'
         return DbtPythonVenvOperator(
             task_id=self.safe_name,
             task_group=self.task_group,
@@ -319,7 +337,7 @@ class DagModel(DagComponent):
                     task_id=f'wait_freshness__{source_dep.name}__for__{self.safe_name}',
                     task_group=self.af_component,
                     dag=self.domain_dag.af_dag,
-                    env=self.model_task.env if hasattr(self.model_task, 'env') else {},
+                    env=self.model_task.env if self.model_task and hasattr(self.model_task, 'env') else {},
                     source_name=source_dep.source_name,
                     source_identifier=source_dep.identifier,
                     dmp_af_config=self.domain_dag.config,

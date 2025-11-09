@@ -1,5 +1,6 @@
 import datetime as dt
 import json
+from pathlib import Path
 from typing import Optional
 
 import yaml
@@ -66,7 +67,7 @@ def dbt_main_dags(graph: DmpAfGraph) -> dict[str, DAG]:
     for node in graph.nodes:
         if isinstance(node.domain_dag, BackfillDomainDag):
             start_task = node.domain_dag.start_endpoint
-            if len(node.af_component.upstream_task_ids) == 0:
+            if node.af_component and len(node.af_component.upstream_task_ids) == 0:
                 start_task >> node.af_component
 
     return af_dags
@@ -193,10 +194,10 @@ def compile_dmp_af_dags(manifest_path: str, config: Config, etl_service_name: Op
     with open(manifest_path) as fin:
         manifest = json.load(fin)
 
-    with open(config.dbt_project.dbt_profiles_path / 'profiles.yml') as fin:
+    with open(Path(config.dbt_project.dbt_profiles_path) / 'profiles.yml') as fin:
         profiles = yaml.safe_load(fin)
 
-    with open(config.dbt_project.dbt_project_path / 'dbt_project.yml') as fin:
+    with open(Path(config.dbt_project.dbt_project_path) / 'dbt_project.yml') as fin:
         dbt_project_profile_name = yaml.safe_load(fin)['profile']
 
     return _compile_dbt_dags(

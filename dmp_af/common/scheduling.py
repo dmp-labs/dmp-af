@@ -18,7 +18,7 @@ class BaseScheduleTag(ABC):
             # if timeshift is greater than max timeshift, set it to max timeshift - 1 minute
             max_timeshift = self.default_cron_expression.distance_between_two_runs()
             timeshift = min(timeshift, max_timeshift - datetime.timedelta(minutes=1))
-        self.timeshift = timeshift or self.default_timeshift
+        self.timeshift: datetime.timedelta | None = timeshift or self.default_timeshift
 
     @property
     @abstractmethod
@@ -56,9 +56,8 @@ class BaseScheduleTag(ABC):
     def default_cron_expression(self) -> CronExpression | None:
         raise NotImplementedError()
 
-    @staticmethod
     @abstractmethod
-    def _af_repr_impl(full_days_shift: int, full_hours_shift: int, rest_minutes_shift: int) -> str | None:
+    def _af_repr_impl(self, full_days_shift: int, full_hours_shift: int, rest_minutes_shift: int) -> str | None:
         raise NotImplementedError()
 
     def __str__(self):
@@ -71,21 +70,30 @@ class BaseScheduleTag(ABC):
         if not isinstance(other, BaseScheduleTag):
             return NotImplemented
         if self.level == other.level:
+            # Handle None timeshifts (manual schedules)
+            if self.timeshift is None and other.timeshift is None:
+                return False
+            if self.timeshift is None:
+                return True
+            if other.timeshift is None:
+                return False
             return self.timeshift < other.timeshift
         return self.level < other.level
 
-    def __eq__(self, other: 'str | BaseScheduleTag'):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, str):
             return self.base_name == other
         if isinstance(other, BaseScheduleTag):
             return self.base_name == other.base_name
-        raise TypeError(f'Cannot compare {self} with {other}')
+        return NotImplemented
 
     @property
     def safe_name(self):
         return re.sub(r'^@', 'dbt_', self.name)
 
     def split_timeshift(self) -> tuple[int, int, int]:
+        if self.timeshift is None:
+            return 0, 0, 0
         full_days_shift = self.timeshift.days
         full_hours_shift = self.timeshift.seconds // 3600
         rest_minutes_shift = (self.timeshift.seconds % 3600) // 60
@@ -127,7 +135,7 @@ class _MonthlyScheduleTag(BaseScheduleTag):
                 f'Monthly schedule tag supports only shifts between 0 and 59 minutes, got {self.timeshift}'
             )
         if full_days_shift == 0:
-            full_days_shift = '1'
+            full_days_shift = 1
 
         return f'{rest_minutes_shift} {full_hours_shift} {full_days_shift} * *'
 
@@ -206,11 +214,11 @@ class _ManualScheduleTag(BaseScheduleTag):
         super().__init__(timeshift)
         self.timeshift = None
 
-    @staticmethod
-    def _af_repr_impl(full_days_shift: int, full_hours_shift: int, rest_minutes_shift: int):
+    def _af_repr_impl(self, full_days_shift: int, full_hours_shift: int, rest_minutes_shift: int) -> str | None:
         return None
 
-    def af_repr(self):
+    @cache
+    def af_repr(self) -> str | None:
         # there's no schedule for manual DAGs
         return None
 
@@ -264,5 +272,6 @@ class EScheduleTag(Enum):
             return self.value.name == other
         raise TypeError(f'Cannot compare {self} with {other}')
 
-    def __call__(self, *args, **kwargs):
-        return self.value(*args, **kwargs)
+    def __call__(self, *args, **kwargs) -> BaseScheduleTag:
+        # self.value is the schedule class (e.g., _DailyScheduleTag)
+        return self.value(*args, **kwargs)  # type: ignore[no-any-return]

@@ -36,3 +36,18 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install ruff==0.3.7
       - run: ruff check
+
+  mypy:
+    name: 'mypy type check'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.10', '3.11', '3.12' ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --all-groups --all-extras
+      - run: uv run mypy dmp_af --show-error-codes

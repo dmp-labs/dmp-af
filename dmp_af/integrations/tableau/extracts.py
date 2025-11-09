@@ -59,7 +59,8 @@ class _TableauExtractsRegistry:
 def tableau_extracts_refresh(tableau_refresh_tasks: 'list[TableauRefreshTaskConfig]', dmp_af_config: 'Config') -> None:
     import tableauserverclient as tsc
 
-    tableau_auth = get_tableau_auth_object(dmp_af_config)
+    tableau_auth = get_tableau_auth_object(dmp_af_config)  # Validates tableau config exists
+    assert dmp_af_config.tableau is not None  # Help mypy understand
     tableau_server = tsc.Server(server_address=dmp_af_config.tableau.server_address, use_server_version=True)
     tableau_server.auth.sign_in(tableau_auth)
 

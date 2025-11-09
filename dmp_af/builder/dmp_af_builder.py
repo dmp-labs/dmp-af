@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, cast
 
 import pendulum
 
@@ -8,6 +8,7 @@ from dmp_af.builder.dag_components import DagComponent, DagModel, DagSeed, DagSn
 from dmp_af.builder.domain_dag import BackfillDomainDag, DomainDag, DomainDagFactory, DomainDagType
 from dmp_af.builder.maintenance_dag_components import MaintenanceDagComponent
 from dmp_af.common.constants import DOMAIN_DAG_START_DATE_FMT
+from dmp_af.common.scheduling import EScheduleTag
 from dmp_af.conf import Config
 from dmp_af.parser.dbt_node_model import DbtModelMaintenanceType, DbtNode
 from dmp_af.parser.dbt_profiles import Profiles
@@ -45,6 +46,7 @@ class DomainDagsRegistry:
         if self.dags_type == DomainDagType.BACKFILL:
             return f'{dbt_node.domain}__bf'
         if self.dags_type == DomainDagType.SCHEDULED:
+            assert dbt_node.config.schedule is not None, 'Scheduled DAG must have a schedule'
             return f'{dbt_node.domain}_{dbt_node.config.schedule.safe_name}'
         if self.dags_type == DomainDagType.MAINTENANCE:
             return f'{dbt_node.domain}__maintenance'
@@ -58,7 +60,7 @@ class DomainDagsRegistry:
             self._domain_dags[domain_dag_name] = DomainDagFactory.create(
                 dag_type=self.dags_type if not dbt_node.is_large_test() else DomainDagType.LARGE_TESTS,
                 domain_name=dbt_node.domain,
-                schedule=dbt_node.config.schedule,
+                schedule=dbt_node.config.schedule or EScheduleTag.daily(),
                 config=self.config,
             )
 
@@ -153,13 +155,20 @@ class DmpAfGraph:
                 # node is not an independent dag component or should not be in dag
                 continue
 
-        self._models = {
-            node.unique_id: self._dag_components_registry[node.unique_id] for node in nodes if not node.is_test()
-        }
+        self._models = {}
+        for node in nodes:
+            if not node.is_test():
+                component = self._dag_components_registry[node.unique_id]
+                assert isinstance(component, DagModel), f'Expected DagModel, got {type(component)}'
+                self._models[node.unique_id] = component
+
         if not backfill:
-            self._large_tests = {
-                node.unique_id: self._dag_components_registry[node.unique_id] for node in nodes if node.is_large_test()
-            }
+            self._large_tests = {}
+            for node in nodes:
+                if node.is_large_test():
+                    component = self._dag_components_registry[node.unique_id]
+                    assert isinstance(component, LargeTest), f'Expected LargeTest, got {type(component)}'
+                    self._large_tests[node.unique_id] = component
 
     def _collect_maintenance_components(self) -> None:
         for model in self._models.values():
@@ -191,6 +200,10 @@ class DmpAfGraph:
 
             elif node.is_medium_test():
                 parent_node = self._find_parent_node_for_test(node)
+                # Medium tests only exist for regular (non-backfill) models
+                from dmp_af.builder.dag_components import DagModel
+
+                assert isinstance(parent_node, DagModel), 'Parent of medium test must be DagModel'
                 parent_domain_dag = parent_node.domain_dag
                 if parent_domain_dag not in self._medium_tests:
                     self._medium_tests[parent_domain_dag] = MediumTests(parent_domain_dag, parent_node.dbt_node.config)
@@ -217,12 +230,13 @@ class DmpAfGraph:
 
         self._bind_medium_tests()
 
-        return (
-            list(self._models.values())
-            + list(self._medium_tests.values())
-            + list(self._large_tests.values())
-            + list(*[maintenance.values() for maintenance in self._maintenance_components.values()])
-        )
+        result: list[DagComponent] = []
+        result.extend(cast(list[DagComponent], list(self._models.values())))
+        result.extend(cast(list[DagComponent], list(self._medium_tests.values())))
+        result.extend(cast(list[DagComponent], list(self._large_tests.values())))
+        for maintenance in self._maintenance_components.values():
+            result.extend(cast(list[DagComponent], list(maintenance.values())))
+        return result
 
     def _build_backfill_dag_components(self, nodes: list[DbtNode]) -> list[DagComponent]:
         self._collect_all_models(nodes, backfill=True)
@@ -235,9 +249,12 @@ class DmpAfGraph:
 
 
 def get_domain_dag_start_date(graph: DmpAfGraph, domain_dag: DomainDag) -> pendulum.DateTime:
-    min_date_from_nodes = min(
-        node.node_config.domain_start_date for node in graph.nodes if node.domain_dag == domain_dag
-    )
+    dates = [
+        node.node_config.domain_start_date
+        for node in graph.nodes
+        if node.domain_dag == domain_dag and node.node_config.domain_start_date
+    ]
+    min_date_from_nodes = min(dates) if dates else None
     if min_date_from_nodes:
         return pendulum.from_format(min_date_from_nodes, DOMAIN_DAG_START_DATE_FMT)
     return graph.config.dag_start_date

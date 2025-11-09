@@ -12,7 +12,7 @@ class _TaskScheduleMapping:
     def __init__(self, wait_policy: WaitPolicy):
         self.wait_policy = wait_policy
 
-        self._mapping = {}
+        self._mapping: dict[tuple[str, str], list[Callable[..., datetime | None] | None]] = {}
 
     def is_registered(self, upstream_schedule_tag: BaseScheduleTag, downstream_schedule_tag: BaseScheduleTag) -> bool:
         return (upstream_schedule_tag.name, downstream_schedule_tag.name) in self._mapping
@@ -21,21 +21,28 @@ class _TaskScheduleMapping:
         self,
         upstream_schedule_tag: BaseScheduleTag,
         downstream_schedule_tag: BaseScheduleTag,
-        fn: Callable | list[Callable],
+        fn: Callable[..., datetime | None] | list[Callable[..., datetime | None]],
     ):
+        fn_list: list[Callable[..., datetime | None] | None]
         if not isinstance(fn, list):
-            fn = [fn]
-        self._mapping[(upstream_schedule_tag.name, downstream_schedule_tag.name)] = fn
+            fn_list = [fn]
+        else:
+            fn_list = list(fn)  # Cast to allow None in list
+        self._mapping[(upstream_schedule_tag.name, downstream_schedule_tag.name)] = fn_list
         return self
 
     @staticmethod
-    def _update_upstream_cron_args(fn: partial, upstream: BaseScheduleTag, downstream: BaseScheduleTag):
-        if fn is None:
+    def _update_upstream_cron_args(
+        fn: Callable[..., datetime | None] | None, upstream: BaseScheduleTag, downstream: BaseScheduleTag
+    ):
+        if fn is None or not isinstance(fn, partial):
             return
 
         fn.keywords.update({'self_schedule': downstream, 'upstream_schedule': upstream})
 
-    def get(self, key: tuple[BaseScheduleTag, BaseScheduleTag], default=None) -> list[Callable | None]:
+    def get(
+        self, key: tuple[BaseScheduleTag, BaseScheduleTag], default=None
+    ) -> list[Callable[..., datetime | None] | None]:
         """
         If the result function is None (or list of None),
         it means that there is no need to find a specific upstream task, wait for the last one.
@@ -43,7 +50,7 @@ class _TaskScheduleMapping:
         if not isinstance(default, list):
             default = [default]
         stream_names = (key[0].name, key[1].name)
-        fns = self._mapping.get(stream_names, default)
+        fns: list[Callable[..., datetime | None] | None] = self._mapping.get(stream_names, default)
         for fn in fns:
             self._update_upstream_cron_args(fn, upstream=key[0], downstream=key[1])
 
@@ -55,7 +62,7 @@ def calculate_task_to_wait_execution_date(
     self_schedule: BaseScheduleTag,
     upstream_schedule: BaseScheduleTag,
     num_iter: int | None = None,
-):
+) -> datetime | None:
     """
     this function calculates the correct nearest execution date for the upstream task to wait for.
 
@@ -65,6 +72,9 @@ def calculate_task_to_wait_execution_date(
     """
     self_cron = self_schedule.cron_expression()
     upstream_cron = upstream_schedule.cron_expression()
+    assert self_cron is not None, 'Manual schedules cannot be used in dependency calculations'
+    assert upstream_cron is not None, 'Manual schedules cannot be used in dependency calculations'
+
     interval_stop_dttm: datetime = croniter(self_cron.raw_cron_expression, execution_date).get_next(datetime)
 
     if self_schedule < upstream_schedule:

@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import shlex
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import kubernetes.client.models as k8s
@@ -57,7 +58,7 @@ class DbtKubernetesPodOperator(KubernetesPodOperator):
         )
 
     def _find_model_config_by_name(self):
-        with open(self.dmp_af_config.dbt_project.dbt_project_path / 'target/manifest.json', 'r') as fn:
+        with open(Path(self.dmp_af_config.dbt_project.dbt_project_path) / 'target/manifest.json', 'r') as fn:
             manifest = json.load(fn)
 
         model_config = {}
@@ -95,7 +96,7 @@ class DbtKubernetesPodOperator(KubernetesPodOperator):
         self.env_vars.append(k8s.V1EnvVar(name='AIRFLOW_UNIQUE_NAME', value=os.getenv('AIRFLOW_UNIQUE_NAME')))
         self.env_vars.append(k8s.V1EnvVar(name='DAG_RUN_CONF', value=json.dumps(context['dag_run'].conf or {})))
 
-        with open(self.dmp_af_config.dbt_project.dbt_models_path / self.dbt_model_path, 'r') as f:
+        with open(Path(self.dmp_af_config.dbt_project.dbt_models_path) / self.dbt_model_path, 'r') as f:
             raw_node_source = f.read()
         self.env_vars.append(k8s.V1EnvVar(name=PYTHON_SCRIPT_ENV, value=raw_node_source))
 
