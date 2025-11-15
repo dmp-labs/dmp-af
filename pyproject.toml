@@ -62,6 +62,10 @@ lint = [
     "ruff==0.13.1",
     "pre-commit==3.8.0",
     "shandy-sqlfmt[jinjafmt]==0.27.0",
+    "mypy==1.18.2",
+    "types-cachetools>=6.2.0.20251022",
+    "types-croniter>=6.0.0.20250809",
+    "types-pyyaml>=6.0.12.20250915",
 ]
 pins = [
     "flask_limiter>3,<4,!=3.13", # temporarily due to https://github.com/alisaifee/flask-limiter/issues/479
@@ -183,3 +187,31 @@ ignore_token_for_push = false
 
 [tool.semantic_release.publish]
 upload_to_vcs_release = true
+
+[tool.mypy]
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = false  # Disabled: version-specific ignores for Python 3.10/3.11/3.12 compatibility
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+# Ignore missing imports from libraries without stubs
+[[tool.mypy.overrides]]
+module = [
+    "airflow.*",
+    "kubernetes.*",
+    "pycarlo.*",
+    "airflow_mcd.*",
+]
+ignore_missing_imports = true
+
+# Tableau is optional dependency
+[[tool.mypy.overrides]]
+module = "tableauserverclient.*"
+ignore_missing_imports = true

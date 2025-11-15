@@ -1,13 +1,19 @@
 from collections import defaultdict
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    try:
+        from airflow.models.dag import DAG
+    except (ModuleNotFoundError, ImportError):
+        from airflow.sdk import DAG  # type: ignore[no-redef]
 
 try:
     from airflow.operators.empty import EmptyOperator
     from airflow.operators.python import BranchPythonOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.empty import EmptyOperator
-    from airflow.providers.standard.operators.python import BranchPythonOperator
+    from airflow.providers.standard.operators.empty import EmptyOperator  # type: ignore[no-redef]
+    from airflow.providers.standard.operators.python import BranchPythonOperator  # type: ignore[no-redef]
 
 from dmp_af.builder.task_dependencies import RegistryDomainDependencies
 from dmp_af.common import constants
@@ -27,8 +33,8 @@ class DomainDag:
         self,
         domain_name: str,
         config: Config,
-        schedule: BaseScheduleTag = None,
-        additional_tags: Optional[list[str]] = None,
+        schedule: BaseScheduleTag | None = None,
+        additional_tags: list[str] | None = None,
         catchup: bool = True,
     ):
         self.domain_name = domain_name
@@ -42,7 +48,7 @@ class DomainDag:
             RegistryDomainDependencies
         )
 
-        self.af_dag = None
+        self.af_dag: 'DAG | None' = None
 
     @property
     def _base_tags(self) -> Optional[list[str]]:
@@ -85,10 +91,11 @@ class BackfillDomainDag(DomainDag):
     def __init__(
         self,
         domain_name: str,
-        config: Optional[Config] = None,
-        additional_tags: list[str] = None,
+        config: Config | None = None,
+        additional_tags: list[str] | None = None,
         catchup: bool = True,
     ):
+        assert config is not None, 'Config is required for BackfillDomainDag'
         super().__init__(domain_name, config, self.schedule, additional_tags, catchup)
 
         self.start_endpoint: Optional[EmptyOperator] = None
@@ -104,6 +111,11 @@ class BackfillDomainDag(DomainDag):
     @property
     def schedule(self) -> BaseScheduleTag:
         return EScheduleTag.daily()
+
+    @schedule.setter
+    def schedule(self, value: BaseScheduleTag):
+        # Backfill DAGs have a fixed schedule
+        pass
 
     def wrap_dag_with_endpoints(self):
         """
@@ -127,10 +139,11 @@ class MaintenanceDomainDag(DomainDag):
     def __init__(
         self,
         domain_name: str,
-        config: Optional[Config] = None,
-        additional_tags: list[str] = None,
+        config: Config | None = None,
+        additional_tags: list[str] | None = None,
         catchup: bool = False,
     ):
+        assert config is not None, 'Config is required for MaintenanceDomainDag'
         super().__init__(domain_name, config, self.schedule, additional_tags, catchup)
 
     @property
@@ -145,15 +158,21 @@ class MaintenanceDomainDag(DomainDag):
     def schedule(self) -> BaseScheduleTag:
         return EScheduleTag.daily()
 
+    @schedule.setter
+    def schedule(self, value: BaseScheduleTag):
+        # Maintenance DAGs have a fixed schedule
+        pass
+
 
 class LargeTestsDomainDag(DomainDag):
     def __init__(
         self,
         domain_name: str,
-        config: Optional[Config] = None,
-        additional_tags: list[str] = None,
+        config: Config | None = None,
+        additional_tags: list[str] | None = None,
         catchup: bool = False,
     ):
+        assert config is not None, 'Config is required for LargeTestsDomainDag'
         super().__init__(domain_name, config, self.schedule, additional_tags, catchup)
 
     @property
@@ -167,6 +186,11 @@ class LargeTestsDomainDag(DomainDag):
     @property
     def schedule(self) -> BaseScheduleTag:
         return EScheduleTag.daily()
+
+    @schedule.setter
+    def schedule(self, value: BaseScheduleTag):
+        # Large tests DAGs have a fixed schedule
+        pass
 
 
 class DomainDagFactory:

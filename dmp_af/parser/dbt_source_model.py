@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 try:
     import pydantic.v1 as pydantic
 except ModuleNotFoundError:
-    import pydantic
+    import pydantic  # type: ignore[no-redef]
 
 
 class _FreshnessAfterModel(pydantic.BaseModel):

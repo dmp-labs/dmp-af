@@ -163,14 +163,14 @@ class DbtSetTTLOnTable(DbtRunMacroOperation):
     def macro_args(self) -> dict:
         return {
             'model_name': self.model_name,
-            'key': self.maintenance_config.ttl.key,
-            'expiration_timeout': self.maintenance_config.ttl.expiration_timeout,
-            'additional_predicate': self.maintenance_config.ttl.additional_predicate,
-            'force_predicate': self.maintenance_config.ttl.force_predicate,
+            'key': self.maintenance_config.ttl.key,  # type: ignore[union-attr]
+            'expiration_timeout': self.maintenance_config.ttl.expiration_timeout,  # type: ignore[union-attr]
+            'additional_predicate': self.maintenance_config.ttl.additional_predicate,  # type: ignore[union-attr]
+            'force_predicate': self.maintenance_config.ttl.force_predicate,  # type: ignore[union-attr]
         }
 
 
-_MAPPING_MAINTENANCE_TYPE_TO_OPERATOR = {
+_MAPPING_MAINTENANCE_TYPE_TO_OPERATOR: dict[DbtModelMaintenanceType, type[DbtRunMacroOperation]] = {
     DbtModelMaintenanceType.PERSIST_DOCS: DbtPersistTableDocumentation,
     DbtModelMaintenanceType.OPTIMIZE_TABLES: DbtOptimizeTable,
     DbtModelMaintenanceType.VACUUM_TABLE: DbtVacuumTable,
@@ -195,7 +195,8 @@ class DbtMaintenanceOperatorFactory:
             or dmp_af_config.dbt_default_targets.default_target
         )
 
-        return _MAPPING_MAINTENANCE_TYPE_TO_OPERATOR[maintenance_type](
+        operator_class = _MAPPING_MAINTENANCE_TYPE_TO_OPERATOR[maintenance_type]
+        return operator_class(
             model_name=model_name,
             maintenance_config=maintenance_config,
             task_group=task_group,

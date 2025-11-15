@@ -20,14 +20,14 @@ class CustomAfCallbacksConfig:
     :param dag_sla_miss_callback: sla miss callback function for DAG (invoked when a task misses its defined SLA)
     """
 
-    task_on_success_callback: tuple[Callable[..., Any]] = attrs.field(factory=tuple)
-    task_on_failure_callback: tuple[Callable[..., Any]] = attrs.field(factory=tuple)
-    task_on_retry_callback: tuple[Callable[..., Any]] = attrs.field(factory=tuple)
-    task_on_execute_callback: tuple[Callable[..., Any]] = attrs.field(factory=tuple)
+    task_on_success_callback: tuple[Callable[..., Any], ...] = attrs.field(factory=tuple)
+    task_on_failure_callback: tuple[Callable[..., Any], ...] = attrs.field(factory=tuple)
+    task_on_retry_callback: tuple[Callable[..., Any], ...] = attrs.field(factory=tuple)
+    task_on_execute_callback: tuple[Callable[..., Any], ...] = attrs.field(factory=tuple)
 
-    dag_on_failure_callback: tuple[Callable[..., Any]] = attrs.field(factory=tuple)
-    dag_on_success_callback: tuple[Callable[..., Any]] = attrs.field(factory=tuple)
-    dag_sla_miss_callback: tuple[Callable[..., Any]] = attrs.field(factory=tuple)
+    dag_on_failure_callback: tuple[Callable[..., Any], ...] = attrs.field(factory=tuple)
+    dag_on_success_callback: tuple[Callable[..., Any], ...] = attrs.field(factory=tuple)
+    dag_sla_miss_callback: tuple[Callable[..., Any], ...] = attrs.field(factory=tuple)
 
 
 @attrs.define(frozen=True)
@@ -262,12 +262,10 @@ class RetriesConfig:
         If some values in task-specific policies are not specified, they will be used from default policy
         """
         for _attr in attrs.fields(RetriesConfig):
-            _attr: attrs.Attribute
             if _attr.name == 'default_retry_policy':
                 continue
 
-            policy = getattr(self, _attr.name)
-            policy: RetryPolicy | None
+            policy: RetryPolicy | None = getattr(self, _attr.name)
             # if a policy is completely unset, it's overwritten with default policy
             if policy is None:
                 object.__setattr__(self, _attr.name, self.default_retry_policy)
@@ -275,7 +273,6 @@ class RetriesConfig:
 
             # if some parameters of the policy are not set, they are overwritten with values from default policy
             for _policy_attr in attrs.fields(RetryPolicy):
-                _policy_attr: attrs.Attribute
                 if getattr(policy, _policy_attr.name) is None:
                     object.__setattr__(policy, _policy_attr.name, getattr(self.default_retry_policy, _policy_attr.name))
 

@@ -5,7 +5,7 @@ from airflow.exceptions import AirflowSkipException
 try:
     from airflow.operators.python import PythonOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.python import PythonOperator
+    from airflow.providers.standard.operators.python import PythonOperator  # type: ignore[no-redef]
 
 from dmp_af.conf import Config
 from dmp_af.integrations.tableau import is_tableau_installed, tableau_extracts_refresh
@@ -22,7 +22,7 @@ def _tableau_extracts_refresh_dev(*args, **kwargs) -> None:
 
 
 class TableauExtractsRefreshOperator(PythonOperator):
-    template_fields = tuple()
+    template_fields: tuple[str, ...] = tuple()
 
     def __init__(self, tableau_refresh_tasks: 'list[TableauRefreshTaskConfig]', dmp_af_config: Config, **kwargs):
         if not is_tableau_installed():

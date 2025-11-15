@@ -4,7 +4,7 @@ from typing import Any, Literal
 try:
     from pydantic.v1 import BaseModel, Field, root_validator
 except ModuleNotFoundError:
-    from pydantic import BaseModel, Field, root_validator
+    from pydantic import BaseModel, Field, root_validator  # type: ignore[no-redef,assignment]
 
 
 class Target(BaseModel):

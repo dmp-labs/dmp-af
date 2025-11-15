@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Any, Sequence
 
 from airflow import __version__ as airflow_version
@@ -8,7 +9,7 @@ from packaging.version import Version
 try:
     from airflow.operators.python import PythonVirtualenvOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.python import PythonVirtualenvOperator
+    from airflow.providers.standard.operators.python import PythonVirtualenvOperator  # type: ignore[no-redef]
 
 from dmp_af.conf import Config
 from dmp_af.parser.dbt_profiles import VenvTarget
@@ -52,7 +53,7 @@ class DbtPythonVenvOperator(PythonVirtualenvOperator):
         )
 
     def execute(self, context: Context) -> Any:
-        with open(self.dmp_af_config.dbt_project.dbt_models_path / self.dbt_model_path, 'r') as f:
+        with open(Path(self.dmp_af_config.dbt_project.dbt_models_path) / self.dbt_model_path, 'r') as f:
             model_code = f.read()
         self.op_args = (model_code,)
 

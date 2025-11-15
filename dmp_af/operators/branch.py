@@ -5,7 +5,7 @@ from airflow.utils.context import Context
 try:
     from airflow.operators.python import BranchPythonOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.python import BranchPythonOperator
+    from airflow.providers.standard.operators.python import BranchPythonOperator  # type: ignore[no-redef]
 
 from dmp_af.parser.dbt_node_model import DbtNodeConfig
 
@@ -25,7 +25,7 @@ class DbtBranchOperator(BranchPythonOperator):
 
     def execute(self, context: Context) -> Any:
         downstream_task_ids = [t.task_id for t in self.downstream_list]
-        self.op_kwargs[DOWNSTREAM_TASK_IDS_KWARG] = downstream_task_ids
+        self.op_kwargs[DOWNSTREAM_TASK_IDS_KWARG] = downstream_task_ids  # type: ignore[index]
         return super().execute(context)
 
 

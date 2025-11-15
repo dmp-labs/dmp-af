@@ -2,20 +2,21 @@ import json
 import logging
 import shutil
 from datetime import timedelta
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Dict, Optional
 
 try:
     import pydantic.v1 as pydantic
 except ModuleNotFoundError:
-    import pydantic
+    import pydantic  # type: ignore[no-redef]
 
 from airflow.utils.context import Context
 
 try:
     from airflow.operators.bash import BashOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.bash import BashOperator
+    from airflow.providers.standard.operators.bash import BashOperator  # type: ignore[no-redef]
 
 from dmp_af.common.constants import DBT_COMPILE_POOL
 from dmp_af.common.scheduling import BaseScheduleTag, EScheduleTag
@@ -75,7 +76,7 @@ class DbtBaseOperator(BashOperator):
         kwargs.update(get_delay_by_schedule(schedule_tag))
         af_pool = pool or f'dbt_{self.target_environment}' if dmp_af_config.use_dbt_target_specific_pools else None
 
-        retry_policy = (
+        retry_policy_dict = (
             retry_policy.as_dict()
             if retry_policy is not None
             else dmp_af_config.retries_config.default_retry_policy.as_dict()
@@ -86,20 +87,21 @@ class DbtBaseOperator(BashOperator):
             pool=af_pool,
             append_env=True,
             bash_command=self.generate_bash(**self.__dict__),
-            **retry_policy,
+            **retry_policy_dict,
             **kwargs,
         )
 
     def _render_full_bash_command(self) -> None:
         raw_bash_options = ' '.join(f'{option} {value}' for option, value in self.bash_options.items() if value)
         raw_bash_flags = ' '.join(self.bash_flags)
-        self.bash_command += f' {raw_bash_options} {raw_bash_flags}'
+        self.bash_command += f' {raw_bash_options} {raw_bash_flags}'  # type: ignore[operator]
 
     def execute(self, context: Context):
         with TemporaryDirectory(dir=self.dmp_af_config.dbt_project.dbt_target_path) as tmp_target_path:
             # copy manifest.json to tmp a target path to isolate it
+
             shutil.copy(
-                self.dmp_af_config.dbt_project.dbt_project_path / 'target/manifest.json',
+                Path(self.dmp_af_config.dbt_project.dbt_project_path) / 'target/manifest.json',
                 f'{tmp_target_path}/manifest.json',
             )
 
@@ -114,7 +116,7 @@ class DbtBaseOperator(BashOperator):
             if self.dmp_af_config.mcd and self.dmp_af_config.mcd.artifacts_export_enabled:
                 from dmp_af.integrations.mcd import send_dbt_artifacts_to_montecarlo
 
-                latest_log_file = find_latest_log_file(context, self.dmp_af_config.dbt_project.dbt_log_path)
+                latest_log_file = find_latest_log_file(context, Path(self.dmp_af_config.dbt_project.dbt_log_path))
                 try:
                     send_dbt_artifacts_to_montecarlo(
                         target_path=tmp_target_path,
@@ -256,7 +258,7 @@ class DbtBaseActionOperator(DbtIntervalActionOperator):
         self,
         model_name: str,
         model_type: str = '',
-        schedule_tag: Optional[BaseScheduleTag] = None,
+        schedule_tag: BaseScheduleTag = EScheduleTag.daily(),
         overlap: bool = False,
         **kwargs,
     ) -> None:

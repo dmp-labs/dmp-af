@@ -7,7 +7,7 @@ from dmp_af.integrations.mcd import prepare_mcd_callbacks
 
 
 def merge_dicts_by_key(*dicts: dict) -> dict:
-    merged_dict = dict()
+    merged_dict: dict[str, list[Any]] = dict()
 
     for d in dicts:
         for key, value in d.items():

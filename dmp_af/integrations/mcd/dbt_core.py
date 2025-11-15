@@ -19,7 +19,7 @@ def _get_resource_id(client: 'Client', metastore_name: str) -> str:
     warehouses = client(query).get_user.account.warehouses
     for wh in warehouses:
         if wh.name == metastore_name:
-            return wh.uuid
+            return str(wh.uuid)
     raise ValueError(f'Warehouse {metastore_name} not found. Found: {warehouses}')
 
 

@@ -3,6 +3,7 @@ import os
 import shutil
 from datetime import datetime
 from functools import cached_property, partial
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Callable, Optional, Sequence
 
@@ -17,9 +18,9 @@ try:
     from airflow.sensors.external_task import ExternalTaskSensor
     from airflow.sensors.python import PythonSensor
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.hooks.subprocess import SubprocessHook
-    from airflow.providers.standard.sensors.external_task import ExternalTaskSensor
-    from airflow.providers.standard.sensors.python import PythonSensor
+    from airflow.providers.standard.hooks.subprocess import SubprocessHook  # type: ignore[no-redef]
+    from airflow.providers.standard.sensors.external_task import ExternalTaskSensor  # type: ignore[no-redef]
+    from airflow.providers.standard.sensors.python import PythonSensor  # type: ignore[no-redef]
 
 from dmp_af.common.af_scheduling_utils import (
     GLOBAL_TASK_SCHEDULE_MAPPINGS,
@@ -72,8 +73,14 @@ def get_execution_date_fn_mapping(
             if _mapping.is_registered(upstream_schedule_tag, downstream_schedule_tag):
                 return _mapping
 
-            embeddings_number = downstream_schedule_tag.cron_expression().embeddings_number(
-                upstream_schedule_tag.cron_expression(),
+            downstream_cron = downstream_schedule_tag.cron_expression()
+            upstream_cron = upstream_schedule_tag.cron_expression()
+            assert (
+                downstream_cron is not None and upstream_cron is not None
+            ), 'Manual schedules not supported with WaitPolicy.all'
+
+            embeddings_number = downstream_cron.embeddings_number(
+                upstream_cron,
                 is_upstream_bigger=downstream_schedule_tag < upstream_schedule_tag,
             )
             _mapping.add(
@@ -113,7 +120,7 @@ class AfExecutionDateFn:
         self.downstream_schedule_tag = downstream_schedule_tag
         self.wait_policy = wait_policy
 
-    def get_execution_dates(self) -> list[Optional[callable]]:
+    def get_execution_dates(self) -> list[Callable[..., datetime | None] | None]:
         return get_execution_date_fn_mapping(
             self.wait_policy,
             self.upstream_schedule_tag,
@@ -177,7 +184,7 @@ class DbtSourceFreshnessSensor(PythonSensor):
         source_name: str,
         source_identifier: str,
         dmp_af_config: Config,
-        target_environment: str = None,
+        target_environment: str | None = None,
         **kwargs,
     ):
         self.env = env
@@ -194,11 +201,8 @@ class DbtSourceFreshnessSensor(PythonSensor):
                 retries,
             )
 
-        _poke_interval = (
-            retry_policy.get('retry_delay').total_seconds()
-            if retry_policy.get('retry_delay')
-            else _DEFAULT_POKE_INTERVAL_SECONDS
-        )
+        retry_delay = retry_policy.get('retry_delay')
+        _poke_interval = retry_delay.total_seconds() if retry_delay else _DEFAULT_POKE_INTERVAL_SECONDS
         retry_policy['retries'] = _DEFAULT_WAIT_TIMEOUT // _poke_interval - 1
         retry_policy['poke_interval'] = _poke_interval
         retry_policy['timeout'] = _DEFAULT_WAIT_TIMEOUT
@@ -223,7 +227,7 @@ class DbtSourceFreshnessSensor(PythonSensor):
         env.update(self.env)
         with TemporaryDirectory(dir=self.dmp_af_config.dbt_project.dbt_target_path) as tmp_target_path:
             shutil.copy(
-                self.dmp_af_config.dbt_project.dbt_project_path / 'target/manifest.json',
+                Path(self.dmp_af_config.dbt_project.dbt_project_path) / 'target/manifest.json',
                 f'{tmp_target_path}/manifest.json',
             )
             freshness_cmd = ' && '.join(

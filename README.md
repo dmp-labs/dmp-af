@@ -5,8 +5,8 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dmp-af.svg)](https://pypi.org/project/dmp-af/)
 [![PyPI - Downloads](https://img.shields.io/pepy/dt/dmp-af)](https://pypi.org/project/dmp-af/)
 
-[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 
 # dmp-af: distributed dbt runs on Airflow
 

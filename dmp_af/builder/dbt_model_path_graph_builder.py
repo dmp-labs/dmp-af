@@ -10,9 +10,9 @@ class DbtModelPathGraph:
         self.dbt_nodes = nodes
         self.dbt_sources = sources
 
-        self.node_to_path = {}
-        self.path_to_path = collections.defaultdict(set)
-        self.full_path_to_path = collections.defaultdict(set)
+        self.node_to_path: dict[str, str] = {}
+        self.path_to_path: dict[str, set[str]] = collections.defaultdict(set)
+        self.full_path_to_path: dict[str, set[str]] = collections.defaultdict(set)
 
         self._build_path_dependencies()
 
@@ -46,13 +46,14 @@ class DbtModelPathGraph:
                     self.path_to_path[node.original_file_path_dirname].add(self.node_to_path[dep])
 
         # step3 Create dict path (depends on) set of all pathes
-        for path, dep_path in self.path_to_path.copy().items():
+        for path in self.path_to_path.copy():
+            dep_path_set = self.path_to_path[path]
             # all pathes form step2 above
-            self.full_path_to_path[path].update(dep_path)
+            self.full_path_to_path[path].update(dep_path_set)
 
             # create queue with pathes we depends on
-            queue = collections.deque()
-            queue.extend(dep_path)
+            queue: tp.Deque[str] = collections.deque()
+            queue.extend(dep_path_set)
 
             # while queue is not empty
             while len(queue) > 0:

@@ -1,12 +1,12 @@
 from collections import defaultdict
-from typing import Generator, Optional
+from typing import Any, Callable, Generator, Optional
 
 from airflow.utils.task_group import TaskGroup
 
 try:
     from airflow.operators.empty import EmptyOperator
 except (ModuleNotFoundError, ImportError):
-    from airflow.providers.standard.operators.empty import EmptyOperator
+    from airflow.providers.standard.operators.empty import EmptyOperator  # type: ignore[no-redef]
 
 from dmp_af.builder.domain_dag import DomainDag
 from dmp_af.builder.task_dependencies import DagDelayedDependencyRegistry
@@ -17,7 +17,7 @@ from dmp_af.operators.run import DbtRun, DbtSeed, DbtSnapshot, DbtTest
 from dmp_af.operators.sensors import AfExecutionDateFn, DbtExternalSensor, DbtSourceFreshnessSensor
 from dmp_af.operators.supplemental import TableauExtractsRefreshOperator
 from dmp_af.operators.venv import DbtPythonVenvOperator
-from dmp_af.parser.dbt_node_model import DbtNode, DbtNodeConfig
+from dmp_af.parser.dbt_node_model import DbtNode, DbtNodeConfig, WaitPolicy
 from dmp_af.parser.dbt_profiles import KubernetesTarget, VenvTarget
 from dmp_af.parser.dbt_source_model import DbtSource
 
@@ -42,7 +42,7 @@ class DagComponent:
         self.model_task: Optional[DbtRun | DbtKubernetesPodOperator] = None
         self.task_group: Optional[TaskGroup] = None
         self.af_sensor_endpoint: Optional[EmptyOperator | DbtRun | DbtKubernetesPodOperator] = None
-        self._af_callbacks: dict[str, list[Optional[callable]]] = {}
+        self._af_callbacks: dict[str, list[Callable[..., Any] | None]] = {}
 
     @property
     def depends_on(self) -> list['DagComponent']:
@@ -52,11 +52,11 @@ class DagComponent:
     def safe_name(self) -> str:
         return self.name.replace('.', '__')
 
-    def add_af_callbacks(self, callbacks: dict[str, list[Optional[callable]]]):
+    def add_af_callbacks(self, callbacks: dict[str, list[Callable[..., Any] | None]]):
         self._af_callbacks.update(callbacks)
 
     def add_dependency(self, dep: 'DagComponent'):
-        if self.node_config.dependencies[dep.name].skip:
+        if self.node_config.dependencies and self.node_config.dependencies[dep.name].skip:
             return
 
         self._depends_on.add(dep)
@@ -81,9 +81,9 @@ class DagComponent:
             task_id=self.safe_name,
             task_group=self.task_group,
             python_callable=create_decision_path_function(self.node_config, self.safe_name),
-            dag=self.domain_dag.af_dag,
+            dag=self.domain_dag.af_dag,  # type: ignore[arg-type]
         )
-        delayed_deps(brancher) >> delayed_deps(self.model_task)
+        delayed_deps(brancher) >> delayed_deps(self.model_task)  # type: ignore[arg-type]
 
         return brancher
 
@@ -92,16 +92,28 @@ class DagComponent:
         dep: 'DagComponent',
         task_group: TaskGroup,
     ) -> Generator[DbtExternalSensor, None, None]:
+        wait_policy = (
+            self.node_config.dependencies[dep.name].wait_policy if self.node_config.dependencies else WaitPolicy.last
+        )
         execution_date_fns = AfExecutionDateFn(
             upstream_schedule_tag=dep.domain_dag.schedule,
             downstream_schedule_tag=self.domain_dag.schedule,
-            wait_policy=self.node_config.dependencies[dep.name].wait_policy,
+            wait_policy=wait_policy,
         ).get_execution_dates()
 
         for i, execution_date_fn in enumerate(execution_date_fns):
+            # Skip None execution_date_fn (shouldn't happen, but type-safe)
+            if execution_date_fn is None:
+                continue
+
             # airflow task_id for statsd must be less than 250 chars.
             # it's not necessary to have a long name for the only one external dependency wait
             _suffix = f'__{i}' if len(execution_date_fns) > 1 else ''
+
+            # By this point, all DAGs should be initialized
+            assert dep.domain_dag.af_dag is not None, f'DAG not initialized for {dep.name}'
+            assert dep.af_sensor_endpoint is not None, f'Sensor endpoint not set for {dep.name}'
+
             wait = DbtExternalSensor(
                 dmp_af_config=self.domain_dag.config,
                 task_id=f'wait__{dep.safe_name}{_suffix}',
@@ -110,7 +122,7 @@ class DagComponent:
                 external_task_id=dep.af_sensor_endpoint.task_id,
                 execution_date_fn=execution_date_fn,
                 dep_schedule=dep.domain_dag.schedule,
-                dag=self.domain_dag.af_dag,
+                dag=self.domain_dag.af_dag,  # type: ignore[arg-type]
             )
             yield wait
 
@@ -139,7 +151,7 @@ class DagComponent:
                         deps_registry.add_dependency(dep, wait)
 
                 for wait_task in deps_registry.get_dependency_wait_task(dep):
-                    delayed_deps(wait_task) >> delayed_deps(self.model_task)
+                    delayed_deps(wait_task) >> delayed_deps(self.model_task)  # type: ignore[arg-type]
 
     def _init_dependencies_per_task_af(
         self,
@@ -150,9 +162,9 @@ class DagComponent:
             if not self._is_external_dep_valid(dep):
                 continue
 
-            for wait in self._ext_dep_waits_generator(dep, self.af_component):
-                delayed_deps(brancher) >> delayed_deps(wait)
-                delayed_deps(wait) >> delayed_deps(self.model_task)
+            for wait in self._ext_dep_waits_generator(dep, self.af_component):  # type: ignore[arg-type]
+                delayed_deps(brancher) >> delayed_deps(wait)  # type: ignore[arg-type]
+                delayed_deps(wait) >> delayed_deps(self.model_task)  # type: ignore[arg-type]
 
     def _init_dependencies_af(self, delayed_deps: DagDelayedDependencyRegistry):
         """
@@ -166,9 +178,9 @@ class DagComponent:
                 dep.init_af()
 
             if dep.domain_dag == self.domain_dag:
-                delayed_deps(dep.model_task) >> delayed_deps(self.model_task)
-                delayed_deps(dep.af_component) >> delayed_deps(self.af_component)
-                delayed_deps(dep.model_task) >> delayed_deps(brancher)
+                delayed_deps(dep.model_task) >> delayed_deps(self.model_task)  # type: ignore[arg-type]
+                delayed_deps(dep.af_component) >> delayed_deps(self.af_component)  # type: ignore[arg-type]
+                delayed_deps(dep.model_task) >> delayed_deps(brancher)  # type: ignore[arg-type]
 
         if self.domain_dag.config.model_dependencies.wait_policy.per_domain:
             self._init_dependencies_per_domain_af(delayed_deps)
@@ -256,6 +268,9 @@ class DagModel(DagComponent):
         Create a k8s operator to run the dbt model not in DWH but in a k8s pod
         It's used only in rare cases when model requires a lot of resources and/or data processing on the same node
         """
+        assert isinstance(
+            self.dbt_node.target_details, KubernetesTarget
+        ), f'K8s runner requires KubernetesTarget, got {type(self.dbt_node.target_details)}'
         return DbtKubernetesPodOperator(
             task_id=self.safe_name,
             dbt_model_name=self.name,
@@ -268,6 +283,9 @@ class DagModel(DagComponent):
         )
 
     def _create_venv_runner_task(self) -> DbtPythonVenvOperator:
+        assert isinstance(
+            self.dbt_node.target_details, VenvTarget
+        ), f'Venv runner requires VenvTarget, got {type(self.dbt_node.target_details)}'
         return DbtPythonVenvOperator(
             task_id=self.safe_name,
             task_group=self.task_group,
@@ -307,7 +325,7 @@ class DagModel(DagComponent):
                 schedule_tag=self.domain_dag.schedule,
                 dmp_af_config=self.domain_dag.config,
             )
-            delayed_deps(self.model_task) >> delayed_deps(test_task)
+            delayed_deps(self.model_task) >> delayed_deps(test_task)  # type: ignore[arg-type]
             delayed_deps(test_task) >> delayed_deps(endpoint_task)
 
         return endpoint_task
@@ -318,14 +336,14 @@ class DagModel(DagComponent):
                 source_wait = DbtSourceFreshnessSensor(
                     task_id=f'wait_freshness__{source_dep.name}__for__{self.safe_name}',
                     task_group=self.af_component,
-                    dag=self.domain_dag.af_dag,
-                    env=self.model_task.env if hasattr(self.model_task, 'env') else {},
+                    dag=self.domain_dag.af_dag,  # type: ignore[arg-type]
+                    env=self.model_task.env if self.model_task and hasattr(self.model_task, 'env') else {},  # type: ignore[arg-type]
                     source_name=source_dep.source_name,
                     source_identifier=source_dep.identifier,
                     dmp_af_config=self.domain_dag.config,
                 )
 
-                delayed_deps(source_wait) >> delayed_deps(self.model_task)
+                delayed_deps(source_wait) >> delayed_deps(self.model_task)  # type: ignore[arg-type]
 
     def _init_supplemental_dependencies_af(self, delayed_deps: DagDelayedDependencyRegistry):
         if self.dbt_node.config.tableau_refresh_tasks:
@@ -336,7 +354,7 @@ class DagModel(DagComponent):
                 tableau_refresh_tasks=self.dbt_node.config.tableau_refresh_tasks,
                 dmp_af_config=self.domain_dag.config,
             )
-            delayed_deps(self.model_task) >> delayed_deps(tableau_refresh_task)
+            delayed_deps(self.model_task) >> delayed_deps(tableau_refresh_task)  # type: ignore[arg-type]
 
     def init_af(self):
         """
@@ -347,7 +365,7 @@ class DagModel(DagComponent):
 
         with self.delayed_deps_registry as delayed_deps:
             self.task_group = self._create_task_group()
-            self.model_task = self._create_runner_task()
+            self.model_task = self._create_runner_task()  # type: ignore[assignment]
             endpoint_task = self._init_small_tests_af(delayed_deps)
 
             self.af_component = self.task_group or self.model_task
@@ -359,11 +377,11 @@ class DagModel(DagComponent):
 
 
 class DagSnapshot(DagModel):
-    runner_class = DbtSnapshot
+    runner_class = DbtSnapshot  # type: ignore[assignment]
 
 
 class DagSeed(DagModel):
-    runner_class = DbtSeed
+    runner_class = DbtSeed  # type: ignore[assignment]
 
 
 class MediumTests(DagComponent):
@@ -410,7 +428,7 @@ class LargeTest(DagComponent):
         with self.delayed_deps_registry as delayed_deps:
             self.task_group = self._create_task_group()
 
-            self.model_task = DbtTest(
+            self.model_task = DbtTest(  # type: ignore[assignment]
                 task_id=self.safe_name,
                 model_name=self.name,
                 dag=self.domain_dag.af_dag,

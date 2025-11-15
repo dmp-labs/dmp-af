@@ -1,5 +1,6 @@
 import datetime as dt
 import json
+from pathlib import Path
 from typing import Optional
 
 import yaml
@@ -10,8 +11,8 @@ try:
 
     IS_AIRFLOW_3 = False
 except (ModuleNotFoundError, ImportError):
-    from airflow.sdk import DAG, Param
-    from airflow.sdk.definitions.param import ParamsDict
+    from airflow.sdk import DAG, Param  # type: ignore[no-redef]
+    from airflow.sdk.definitions.param import ParamsDict  # type: ignore[no-redef]
 
     IS_AIRFLOW_3 = True
 
@@ -46,8 +47,8 @@ def dbt_main_dags(graph: DmpAfGraph) -> dict[str, DAG]:
             default_args=DEFAULT_DAG_ARGS,
             max_active_runs=graph.config.max_active_dag_runs,
             render_template_as_native_obj=False,
-            tags=set(dag_tags) if IS_AIRFLOW_3 else list(dag_tags),
-            **dag_callbacks,
+            tags=list(dag_tags) if not IS_AIRFLOW_3 else set(dag_tags),  # type: ignore[arg-type]
+            **dag_callbacks,  # type: ignore[arg-type]
         )
         domain_dag.af_dag = dag
         af_dags[domain_dag.dag_name] = dag
@@ -66,8 +67,8 @@ def dbt_main_dags(graph: DmpAfGraph) -> dict[str, DAG]:
     for node in graph.nodes:
         if isinstance(node.domain_dag, BackfillDomainDag):
             start_task = node.domain_dag.start_endpoint
-            if len(node.af_component.upstream_task_ids) == 0:
-                start_task >> node.af_component
+            if node.af_component and len(node.af_component.upstream_task_ids) == 0:
+                start_task >> node.af_component  # type: ignore[operator]
 
     return af_dags
 
@@ -85,7 +86,7 @@ def dbt_run_model_dag(config: Config) -> dict[str, DAG]:
         catchup=False,
         default_args=DEFAULT_DAG_ARGS,
         max_active_runs=config.max_active_dag_runs,
-        tags={dbt_project_name, 'dbt', 'system'} if IS_AIRFLOW_3 else [dbt_project_name, 'dbt', 'system'],
+        tags={dbt_project_name, 'dbt', 'system'} if IS_AIRFLOW_3 else [dbt_project_name, 'dbt', 'system'],  # type: ignore[arg-type]
         params=ParamsDict(
             {
                 DBT_MODEL_DAG_PARAM: Param(
@@ -148,7 +149,7 @@ def dbt_run_model_dag(config: Config) -> dict[str, DAG]:
                 ),
             }
         ),
-        **dag_callbacks,
+        **dag_callbacks,  # type: ignore[arg-type]
     )
 
     target_environment = config.dbt_default_targets.default_target
@@ -193,10 +194,10 @@ def compile_dmp_af_dags(manifest_path: str, config: Config, etl_service_name: Op
     with open(manifest_path) as fin:
         manifest = json.load(fin)
 
-    with open(config.dbt_project.dbt_profiles_path / 'profiles.yml') as fin:
+    with open(Path(config.dbt_project.dbt_profiles_path) / 'profiles.yml') as fin:
         profiles = yaml.safe_load(fin)
 
-    with open(config.dbt_project.dbt_project_path / 'dbt_project.yml') as fin:
+    with open(Path(config.dbt_project.dbt_project_path) / 'dbt_project.yml') as fin:
         dbt_project_profile_name = yaml.safe_load(fin)['profile']
 
     return _compile_dbt_dags(
