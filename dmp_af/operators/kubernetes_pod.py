@@ -91,8 +91,10 @@ class DbtKubernetesPodOperator(KubernetesPodOperator):
         model_config_b64 = base64.b64encode(json.dumps(model_config).encode()).decode()
 
         self.env_vars.append(k8s.V1EnvVar(name='MODEL_CONFIG_B64', value=model_config_b64))
-        self.env_vars.append(k8s.V1EnvVar(name='START_DTTM', value=context['data_interval_start'].isoformat()))
-        self.env_vars.append(k8s.V1EnvVar(name='END_DTTM', value=context['data_interval_end'].isoformat()))
+        if context['data_interval_start']:
+            self.env_vars.append(k8s.V1EnvVar(name='START_DTTM', value=context['data_interval_start'].isoformat()))
+        if context['data_interval_end']:
+            self.env_vars.append(k8s.V1EnvVar(name='END_DTTM', value=context['data_interval_end'].isoformat()))
         self.env_vars.append(k8s.V1EnvVar(name='AIRFLOW_UNIQUE_NAME', value=os.getenv('AIRFLOW_UNIQUE_NAME')))
         self.env_vars.append(k8s.V1EnvVar(name='DAG_RUN_CONF', value=json.dumps(context['dag_run'].conf or {})))
 
