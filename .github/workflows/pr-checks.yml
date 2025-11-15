@@ -1,0 +1,77 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  get-test-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      python-versions: ${{ steps.extract_versions.outputs.python-versions }}
+      airflow-v2: ${{ steps.extract_versions.outputs.airflow-v2 }}
+      airflow-v3: ${{ steps.extract_versions.outputs.airflow-v3 }}
+      dbt-version: ${{ steps.extract_versions.outputs.dbt-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get quick test versions
+        id: get_versions
+        uses: ./.github/actions/run-dagger
+        with:
+          version: ${{ vars.DAGGER_CORE_VERSION || 'latest' }}
+          module: ./.ci
+          args: tests get-quick-test-versions export --path=./quick_test_versions.json
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN || '' }}
+
+      - name: Extract versions
+        id: extract_versions
+        run: |
+          echo "python-versions=$(jq -c '.python' ./quick_test_versions.json)" >> $GITHUB_OUTPUT
+          echo "airflow-v2=$(jq -r '.airflow_v2' ./quick_test_versions.json)" >> $GITHUB_OUTPUT
+          echo "airflow-v3=$(jq -r '.airflow_v3' ./quick_test_versions.json)" >> $GITHUB_OUTPUT
+          echo "dbt-version=$(jq -r '.dbt' ./quick_test_versions.json)" >> $GITHUB_OUTPUT
+
+  code-quality:
+    name: 'pre-commit'
+    needs: get-test-versions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ${{ fromJSON(needs.get-test-versions.outputs.python-versions) }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: pre-commit/action@v3.0.1
+
+  quick-tests:
+    needs: get-test-versions
+    runs-on: [ ubuntu-latest ]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJSON(needs.get-test-versions.outputs.python-versions) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test airflow v2
+        uses: ./.github/actions/run-dagger
+        with:
+          version: ${{ vars.DAGGER_CORE_VERSION || 'latest' }}
+          module: ./.ci
+          args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=${{ needs.get-test-versions.outputs.airflow-v2 }} --dbt-version=${{ needs.get-test-versions.outputs.dbt-version }} --with-running-airflow-tasks
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN || '' }}
+
+      - name: Test airflow v3
+        uses: ./.github/actions/run-dagger
+        with:
+          version: ${{ vars.DAGGER_CORE_VERSION || 'latest' }}
+          module: ./.ci
+          args: tests test-one-versions-combination --python-version=${{ matrix.python-version }} --airflow-version=${{ needs.get-test-versions.outputs.airflow-v3 }} --dbt-version=${{ needs.get-test-versions.outputs.dbt-version }} --with-running-airflow-tasks
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN || '' }}

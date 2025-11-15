@@ -1,5 +1,5 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/dmp-af)](https://pypi.org/project/dmp-af/)
-[![GitHub Build](https://github.com/dmp-labs/dmp-af/workflows/Tests/badge.svg)](https://github.com/dmp-labs/dmp-af/actions)
+[![GitHub Build](https://github.com/dmp-labs/dmp-af/workflows/PR%20checks/badge.svg)](https://github.com/dmp-labs/dmp-af/actions)
 
 [![License](https://img.shields.io/:license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dmp-af.svg)](https://pypi.org/project/dmp-af/)

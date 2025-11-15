@@ -380,3 +380,19 @@ class IntegrationTests:
             },
         )
         return dag.container().from_('alpine').with_new_file(filename, content).file(filename)
+
+    @function
+    def get_quick_test_versions(self) -> dagger.File:
+        """
+        Get versions for quick PR tests (Python + latest Airflow v2/v3 + latest dbt).
+        """
+        filename = 'quick_test_versions.json'
+        content = json.dumps(
+            {
+                'python': [v.base_version for v in PYTHON_VERSIONS],
+                'airflow_v2': max(AIRFLOW_2_VERSIONS).base_version,
+                'airflow_v3': max(AIRFLOW_3_VERSIONS).base_version,
+                'dbt': max(DBT_VERSIONS).base_version,
+            }
+        )
+        return dag.container().from_('alpine').with_new_file(filename, content).file(filename)
