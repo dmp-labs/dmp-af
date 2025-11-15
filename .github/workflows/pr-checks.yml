@@ -49,6 +49,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-groups --all-extras
       - uses: pre-commit/action@v3.0.1
 
   quick-tests:
