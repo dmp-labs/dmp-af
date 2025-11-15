@@ -24,7 +24,7 @@ AIRFLOW_2_VERSIONS = [
 ]
 AIRFLOW_3_VERSIONS = [
     Version('3.0.6'),
-    Version('3.1.2'),
+    Version('3.1.3'),
 ]
 
 UV_VERSION = '0.8.19'

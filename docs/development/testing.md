@@ -27,7 +27,7 @@ curl -L https://dl.dagger.io/dagger/install.sh | sh
 ```bash
 dagger call -m ./.ci tests test-one-versions-combination \
   --python-version=3.12 \
-  --airflow-version=3.1.2 \
+  --airflow-version=3.1.3 \
   --dbt-version=1.10 \
   --with-running-airflow-tasks
 ```
