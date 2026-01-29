@@ -28,7 +28,7 @@ and [data mesh architecture](https://www.datamesh-architecture.com/#what-is-data
 2. **dbt-first design** - All configuration in dbt model configs, analytics teams stay in dbt, no Airflow knowledge
    required
 3. **Flexible scheduling** - Multiple schedules per model (`@hourly`, `@daily`, `@weekly`,
-   `@monthly`, [and more](examples/manual_scheduling.md))
+   `@monthly`, [and more](docs/tutorials/manual-scheduling.md))
 4. **Enterprise features** - Multiple dbt targets, configurable test strategies, built-in maintenance, Kubernetes
    support
 
@@ -85,7 +85,7 @@ bf_cluster: "dev"
 
 This will create Airflow DAGs for your dbt project.
 
-Check out the documentation for more details [here](docs/docs.md).
+Check out the documentation for more details [here](docs/configuration/model-config.md).
 
 ## Key Features
 
