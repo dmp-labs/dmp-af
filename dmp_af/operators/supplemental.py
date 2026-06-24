@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 
-from airflow.exceptions import AirflowSkipException
+try:
+    from airflow.sdk.exceptions import AirflowSkipException  # type: ignore[attr-defined]
+except (ModuleNotFoundError, ImportError):
+    from airflow.exceptions import AirflowSkipException  # type: ignore[no-redef]
 
 try:
     from airflow.operators.python import PythonOperator

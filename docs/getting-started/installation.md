@@ -121,7 +121,7 @@ Some dependencies have version constraints for compatibility:
 ```python
 # From pyproject.toml
 dependencies = [
-    "apache-airflow >=2.6,<3",
+    "apache-airflow >=2.6,<3.3.0",
     "dbt-core >=1.7,<2",
     "pydantic >=1.10,<3.0.0",
     # ... other dependencies
