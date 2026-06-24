@@ -1,0 +1,150 @@
+name: Check latest Airflow release
+
+# Weekly cron: discover the latest stable apache-airflow on PyPI via Dagger,
+# run the integration suite against it (continue-on-error), then ALWAYS open a
+# PR bumping the matrix — even if the test failed. The PR body and labels
+# reflect the test outcome so the maintainer sees green/red without polling.
+# Major versions emit an issue for manual breaking-change review instead.
+#
+# Why open a PR even on failure: a silent cron failure is easy to miss; a
+# failing PR in the queue is not. This is the Dependabot pattern. We can't
+# rely on the PR's own `pr-checks.yml` for the signal because GitHub Actions'
+# anti-recursion rule blocks workflows from triggering on PRs opened by the
+# default GITHUB_TOKEN.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  check-latest:
+    runs-on: ubuntu-latest
+    outputs:
+      newer_available: ${{ steps.parse.outputs.newer_available }}
+      latest: ${{ steps.parse.outputs.latest }}
+      current_max: ${{ steps.parse.outputs.current_max }}
+      bump_kind: ${{ steps.parse.outputs.bump_kind }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Discover latest stable Airflow
+        uses: ./.github/actions/run-dagger
+        with:
+          version: ${{ vars.DAGGER_CORE_VERSION || 'latest' }}
+          module: ./.ci
+          args: tests get-latest-stable-airflow export --path=./latest_airflow.json
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN || '' }}
+
+      - name: Parse result
+        id: parse
+        run: |
+          jq . ./latest_airflow.json
+          echo "newer_available=$(jq -r .newer_available ./latest_airflow.json)" >> $GITHUB_OUTPUT
+          echo "latest=$(jq -r .latest ./latest_airflow.json)" >> $GITHUB_OUTPUT
+          echo "current_max=$(jq -r .current_max ./latest_airflow.json)" >> $GITHUB_OUTPUT
+          echo "bump_kind=$(jq -r .bump_kind ./latest_airflow.json)" >> $GITHUB_OUTPUT
+
+  bump-and-pr:
+    needs: check-latest
+    if: needs.check-latest.outputs.newer_available == 'true' && needs.check-latest.outputs.bump_kind != 'major'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install packaging
+        run: pip install packaging
+
+      - name: Run integration test against ${{ needs.check-latest.outputs.latest }}
+        id: integration_test
+        continue-on-error: true
+        uses: ./.github/actions/run-dagger
+        with:
+          version: ${{ vars.DAGGER_CORE_VERSION || 'latest' }}
+          module: ./.ci
+          args: >-
+            tests test-one-versions-combination
+            --python-version=3.12
+            --airflow-version=${{ needs.check-latest.outputs.latest }}
+            --dbt-version=1.10
+            --with-running-airflow-tasks
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN || '' }}
+
+      - name: Resolve outcome
+        id: outcome
+        run: |
+          if [ "${{ steps.integration_test.outcome }}" = "success" ]; then
+            echo "label=tests-passing" >> $GITHUB_OUTPUT
+            echo "headline=:white_check_mark: Integration test (Python 3.12 / dbt 1.10) passed against \`${{ needs.check-latest.outputs.latest }}\`." >> $GITHUB_OUTPUT
+          else
+            echo "label=tests-failing" >> $GITHUB_OUTPUT
+            echo "headline=:x: Integration test (Python 3.12 / dbt 1.10) FAILED against \`${{ needs.check-latest.outputs.latest }}\` — see workflow run \`${{ github.run_id }}\` for the log." >> $GITHUB_OUTPUT
+          fi
+
+      - name: Apply bump
+        run: |
+          python .github/scripts/bump_airflow_version.py \
+            "${{ needs.check-latest.outputs.latest }}" \
+            "${{ needs.check-latest.outputs.bump_kind }}"
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "feat: add Airflow ${{ needs.check-latest.outputs.latest }} support"
+          title: "feat: add Airflow ${{ needs.check-latest.outputs.latest }} support"
+          branch: auto/airflow-${{ needs.check-latest.outputs.latest }}
+          base: main
+          delete-branch: true
+          labels: airflow-upgrade,automated,${{ steps.outcome.outputs.label }}
+          body: |
+            Auto-detected new Airflow stable release `${{ needs.check-latest.outputs.latest }}` on PyPI (previous matrix max: `${{ needs.check-latest.outputs.current_max }}`, bump kind: `${{ needs.check-latest.outputs.bump_kind }}`).
+
+            ${{ steps.outcome.outputs.headline }}
+
+            ## Changes
+            - Added `Version('${{ needs.check-latest.outputs.latest }}')` to `AIRFLOW_3_VERSIONS`
+            - On minor bumps only: raised `apache-airflow` upper bound in `pyproject.toml` and `docs/getting-started/installation.md`
+
+            ## Before merging
+            - [ ] If the integration test failed: investigate, fix dmp-af for the new Airflow version, then re-run `Integration Tests` on this branch
+            - [ ] Add the new version row to the README compat matrix
+            - [ ] Skim the Airflow `${{ needs.check-latest.outputs.latest }}` release notes for behavioural changes that touch dmp-af
+
+            Generated by `.github/workflows/check-airflow-release.yml`.
+
+  open-issue-on-major:
+    needs: check-latest
+    if: needs.check-latest.outputs.newer_available == 'true' && needs.check-latest.outputs.bump_kind == 'major'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const latest = '${{ needs.check-latest.outputs.latest }}'
+            const currentMax = '${{ needs.check-latest.outputs.current_max }}'
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Airflow ${latest} (major release) detected — manual review required`,
+              labels: ['airflow-upgrade', 'manual-review'],
+              body: [
+                `A new Airflow major version \`${latest}\` is available on PyPI (current matrix max: \`${currentMax}\`).`,
+                ``,
+                `Major versions are not auto-bumped — they require a manual breaking-change pass before extending support.`,
+                ``,
+                `Generated by \`.github/workflows/check-airflow-release.yml\`.`,
+              ].join('\n'),
+            })
