@@ -128,7 +128,14 @@ class IntegrationTests:
                     '--output-file=requirements.txt',
                 ]
             )
-            # install airflow from official constraints
+            # install airflow first with its official constraints — this
+            # is the source of truth for the Flask/flask-sqlalchemy/Werkzeug
+            # trio. dmp-af's other deps (dbt-core, pytest, ...) are installed
+            # on top unconstrained, which intentionally upgrades shared
+            # transitives (protobuf, typing_extensions, pydantic-core, ...)
+            # to versions dbt-core needs — the airflow ecosystem tolerates
+            # these upgrades at runtime even when its constraints file pins
+            # an older value for reproducibility.
             .with_exec(
                 [
                     'uv',
@@ -149,6 +156,24 @@ class IntegrationTests:
                     '--system',
                     '-r',
                     'requirements.txt',
+                ]
+            )
+            # The unconstrained step above can upgrade Flask past the version
+            # airflow's pinned flask-sqlalchemy supports (e.g. Flask 3 vs
+            # flask-sqlalchemy 2.5.1, which still imports the removed
+            # `_app_ctx_stack`). Force the Flask trio back to the constraint
+            # pins so airflow's runtime imports stay consistent.
+            .with_exec(
+                [
+                    'uv',
+                    'pip',
+                    'install',
+                    '--system',
+                    '-c',
+                    f'https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt',
+                    'flask',
+                    'flask-sqlalchemy',
+                    'werkzeug',
                 ]
             )
         )

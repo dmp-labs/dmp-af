@@ -94,6 +94,10 @@ def prepare_env_for_test():
         'DBT_HOST': 'dummy',
         'DBT_TARGET_ENV': 'dev',
         'DBT_PROFILE_NAME': 'dev',
+        # dbt 1.10 deprecated the `config:` key in profiles.yml; with `--debug`
+        # the deprecation flips dbt's exit code to non-zero on some Python
+        # versions, breaking tests. Set the same setting via env var instead.
+        'DBT_SEND_ANONYMOUS_USAGE_STATS': 'false',
     }
     # fmt: on
     return env_vars
@@ -148,7 +152,6 @@ def get_dbt_profiles_yaml_for_test():
         'password': 'postgres',
     }
     dbt_profiles = {
-        'config': {'send_anonymous_usage_stats': False},
         'main_profile': {
             'target': 'dev',
             'outputs': {
