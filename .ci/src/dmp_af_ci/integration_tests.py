@@ -422,3 +422,42 @@ class IntegrationTests:
             }
         )
         return dag.container().from_('alpine').with_new_file(filename, content).file(filename)
+
+    @function
+    async def get_latest_stable_airflow(self) -> dagger.File:
+        """
+        Discover the latest stable apache-airflow on PyPI and compare to the matrix max.
+
+        Output JSON fields:
+          latest:           highest non-prerelease version on PyPI
+          current_max:      max(AIRFLOW_3_VERSIONS) baked into this repo
+          newer_available:  latest > current_max
+          bump_kind:        'patch' | 'minor' | 'major' | 'none'
+                            'major' is reported but never auto-bumped by the workflow.
+        """
+        all_versions = await self._get_all_available_package_versions('apache-airflow')
+        stable_versions = [v for v in all_versions if not v.is_prerelease]
+        if not stable_versions:
+            raise Exception('No stable apache-airflow versions found on PyPI')
+        latest = max(stable_versions)
+        current_max = max(AIRFLOW_3_VERSIONS)
+
+        if latest <= current_max:
+            bump_kind = 'none'
+        elif latest.major > current_max.major:
+            bump_kind = 'major'
+        elif latest.minor > current_max.minor:
+            bump_kind = 'minor'
+        else:
+            bump_kind = 'patch'
+
+        filename = 'latest_airflow.json'
+        content = json.dumps(
+            {
+                'latest': latest.base_version,
+                'current_max': current_max.base_version,
+                'newer_available': latest > current_max,
+                'bump_kind': bump_kind,
+            }
+        )
+        return dag.container().from_('alpine').with_new_file(filename, content).file(filename)
