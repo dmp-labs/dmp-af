@@ -129,10 +129,26 @@ class IntegrationTests:
                     '--output-file=requirements.txt',
                 ]
             )
-            # install project deps first (unconstrained), then airflow with
-            # its constraints last — so airflow's pins (Flask, flask-sqlalchemy,
-            # protobuf, ...) overwrite anything requirements.txt pulled to a
-            # version incompatible with the airflow stack.
+            # install airflow first with its official constraints — this
+            # is the source of truth for the Flask/flask-sqlalchemy/Werkzeug
+            # trio. dmp-af's other deps (dbt-core, pytest, ...) are installed
+            # on top unconstrained, which intentionally upgrades shared
+            # transitives (protobuf, typing_extensions, pydantic-core, ...)
+            # to versions dbt-core needs — the airflow ecosystem tolerates
+            # these upgrades at runtime even when its constraints file pins
+            # an older value for reproducibility.
+            .with_exec(
+                [
+                    'uv',
+                    'pip',
+                    'install',
+                    '--no-cache',
+                    '--system',
+                    '-c',
+                    f'https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt',
+                    f'apache-airflow[fab,cncf-kubernetes]=={airflow_version}',
+                ]
+            )
             .with_exec(
                 [
                     'uv',
@@ -143,32 +159,19 @@ class IntegrationTests:
                     'requirements.txt',
                 ]
             )
+            # The unconstrained step above can upgrade Flask past the version
+            # airflow's pinned flask-sqlalchemy supports (e.g. Flask 3 vs
+            # flask-sqlalchemy 2.5.1, which still imports the removed
+            # `_app_ctx_stack`). Force the Flask trio back to the constraint
+            # pins so airflow's runtime imports stay consistent.
             .with_exec(
                 [
                     'uv',
                     'pip',
                     'install',
-                    '--no-cache',
                     '--system',
-                    # --reinstall forces a re-resolve against airflow's
-                    # constraints even for packages that requirements.txt
-                    # already installed at a newer version (e.g. pydantic-core,
-                    # typing_extensions, Flask). Otherwise -c constraints is
-                    # silently ignored for pre-existing packages and the stack
-                    # ends up internally inconsistent.
-                    '--reinstall',
                     '-c',
                     f'https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt',
-                    f'apache-airflow[fab,cncf-kubernetes]=={airflow_version}',
-                    # The airflow extras we ask for above don't pull pydantic,
-                    # flask-sqlalchemy etc., so they wouldn't get downgraded
-                    # without naming them explicitly here. The airflow runtime
-                    # still imports all of these, and a mismatched pydantic-core
-                    # vs typing_extensions (or Flask vs flask-sqlalchemy) crashes
-                    # `airflow db migrate`.
-                    'pydantic',
-                    'pydantic-core',
-                    'typing_extensions',
                     'flask',
                     'flask-sqlalchemy',
                     'werkzeug',
