@@ -129,19 +129,10 @@ class IntegrationTests:
                     '--output-file=requirements.txt',
                 ]
             )
-            # install airflow from official constraints
-            .with_exec(
-                [
-                    'uv',
-                    'pip',
-                    'install',
-                    '--no-cache',
-                    '--system',
-                    '-c',
-                    f'https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt',
-                    f'apache-airflow[fab,cncf-kubernetes]=={airflow_version}',
-                ]
-            )
+            # install project deps first (unconstrained), then airflow with
+            # its constraints last — so airflow's pins (Flask, flask-sqlalchemy,
+            # protobuf, ...) overwrite anything requirements.txt pulled to a
+            # version incompatible with the airflow stack.
             .with_exec(
                 [
                     'uv',
@@ -150,6 +141,37 @@ class IntegrationTests:
                     '--system',
                     '-r',
                     'requirements.txt',
+                ]
+            )
+            .with_exec(
+                [
+                    'uv',
+                    'pip',
+                    'install',
+                    '--no-cache',
+                    '--system',
+                    # --reinstall forces a re-resolve against airflow's
+                    # constraints even for packages that requirements.txt
+                    # already installed at a newer version (e.g. pydantic-core,
+                    # typing_extensions, Flask). Otherwise -c constraints is
+                    # silently ignored for pre-existing packages and the stack
+                    # ends up internally inconsistent.
+                    '--reinstall',
+                    '-c',
+                    f'https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt',
+                    f'apache-airflow[fab,cncf-kubernetes]=={airflow_version}',
+                    # The airflow extras we ask for above don't pull pydantic,
+                    # flask-sqlalchemy etc., so they wouldn't get downgraded
+                    # without naming them explicitly here. The airflow runtime
+                    # still imports all of these, and a mismatched pydantic-core
+                    # vs typing_extensions (or Flask vs flask-sqlalchemy) crashes
+                    # `airflow db migrate`.
+                    'pydantic',
+                    'pydantic-core',
+                    'typing_extensions',
+                    'flask',
+                    'flask-sqlalchemy',
+                    'werkzeug',
                 ]
             )
         )
