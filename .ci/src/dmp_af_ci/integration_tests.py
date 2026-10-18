@@ -99,6 +99,19 @@ class IntegrationTests:
         pendulum_version = 2 if airflow_version < Version('2.8.0') else 3
         pydantic_upper_version = 2 if airflow_version < Version('2.7.0') else 3
         python_semantic_release_upper_version = 8 if pydantic_upper_version == 2 else 10
+        runtime_constraint_packages = [
+            'flask',
+            'flask-sqlalchemy',
+            'werkzeug',
+        ]
+        if airflow_version.major >= 3:
+            runtime_constraint_packages.extend(
+                [
+                    'opentelemetry-api',
+                    'opentelemetry-sdk',
+                    'opentelemetry-semantic-conventions',
+                ]
+            )
 
         return (
             env.with_workdir('/dmp_af')
@@ -161,10 +174,9 @@ class IntegrationTests:
                     'requirements.txt',
                 ]
             )
-            # The unconstrained step above can upgrade interdependent Airflow
-            # packages past the versions its runtime supports. Restore the
-            # Flask and OpenTelemetry packages from the selected Airflow
-            # constraints before starting Airflow.
+            # The unconstrained step above can upgrade runtime packages past
+            # the versions Airflow supports. Restore the selected packages
+            # from the Airflow constraints before starting Airflow.
             .with_exec(
                 [
                     'uv',
@@ -173,12 +185,7 @@ class IntegrationTests:
                     '--system',
                     '-c',
                     f'https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt',
-                    'flask',
-                    'flask-sqlalchemy',
-                    'werkzeug',
-                    'opentelemetry-api',
-                    'opentelemetry-sdk',
-                    'opentelemetry-semantic-conventions',
+                    *runtime_constraint_packages,
                 ]
             )
         )
