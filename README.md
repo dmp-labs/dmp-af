@@ -123,6 +123,7 @@ Check out the documentation for more details [here](docs/configuration/model-con
 | 3.1.3           | ≥3.10,<3.14     | ≥1.7,≤1.10          |
 | 3.2.2           | ≥3.10,<3.14     | ≥1.7,≤1.10          |
 | 3.3.0           | ≥3.10,<3.14     | ≥1.7,≤1.10          |
+| 3.3.2           | ≥3.10,<3.14     | ≥1.7,≤1.10          |
 
 ## Project Information
 
