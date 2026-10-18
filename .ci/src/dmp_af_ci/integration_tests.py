@@ -161,11 +161,10 @@ class IntegrationTests:
                     'requirements.txt',
                 ]
             )
-            # The unconstrained step above can upgrade Flask past the version
-            # airflow's pinned flask-sqlalchemy supports (e.g. Flask 3 vs
-            # flask-sqlalchemy 2.5.1, which still imports the removed
-            # `_app_ctx_stack`). Force the Flask trio back to the constraint
-            # pins so airflow's runtime imports stay consistent.
+            # The unconstrained step above can upgrade interdependent Airflow
+            # packages past the versions its runtime supports. Restore the
+            # Flask and OpenTelemetry packages from the selected Airflow
+            # constraints before starting Airflow.
             .with_exec(
                 [
                     'uv',
@@ -177,6 +176,9 @@ class IntegrationTests:
                     'flask',
                     'flask-sqlalchemy',
                     'werkzeug',
+                    'opentelemetry-api',
+                    'opentelemetry-sdk',
+                    'opentelemetry-semantic-conventions',
                 ]
             )
         )
