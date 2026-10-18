@@ -27,6 +27,7 @@ AIRFLOW_3_VERSIONS = [
     Version('3.1.3'),
     Version('3.2.2'),
     Version('3.3.0'),
+    Version('3.3.2'),
 ]
 
 UV_VERSION = '0.8.19'
@@ -98,6 +99,19 @@ class IntegrationTests:
         pendulum_version = 2 if airflow_version < Version('2.8.0') else 3
         pydantic_upper_version = 2 if airflow_version < Version('2.7.0') else 3
         python_semantic_release_upper_version = 8 if pydantic_upper_version == 2 else 10
+        runtime_constraint_packages = [
+            'flask',
+            'flask-sqlalchemy',
+            'werkzeug',
+        ]
+        if airflow_version.major >= 3:
+            runtime_constraint_packages.extend(
+                [
+                    'opentelemetry-api',
+                    'opentelemetry-sdk',
+                    'opentelemetry-semantic-conventions',
+                ]
+            )
 
         return (
             env.with_workdir('/dmp_af')
@@ -160,11 +174,9 @@ class IntegrationTests:
                     'requirements.txt',
                 ]
             )
-            # The unconstrained step above can upgrade Flask past the version
-            # airflow's pinned flask-sqlalchemy supports (e.g. Flask 3 vs
-            # flask-sqlalchemy 2.5.1, which still imports the removed
-            # `_app_ctx_stack`). Force the Flask trio back to the constraint
-            # pins so airflow's runtime imports stay consistent.
+            # The unconstrained step above can upgrade runtime packages past
+            # the versions Airflow supports. Restore the selected packages
+            # from the Airflow constraints before starting Airflow.
             .with_exec(
                 [
                     'uv',
@@ -173,9 +185,7 @@ class IntegrationTests:
                     '--system',
                     '-c',
                     f'https://raw.githubusercontent.com/apache/airflow/constraints-{airflow_version}/constraints-{python_version}.txt',
-                    'flask',
-                    'flask-sqlalchemy',
-                    'werkzeug',
+                    *runtime_constraint_packages,
                 ]
             )
         )
